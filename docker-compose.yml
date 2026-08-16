@@ -1,0 +1,70 @@
+name: apnikhareedari
+
+services:
+  app:
+    build:
+      context: ./docker/php
+    container_name: akd_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      PHP_IDE_CONFIG: "serverName=akd"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - akd
+
+  webserver:
+    image: nginx:stable-alpine
+    container_name: akd_webserver
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - akd
+
+  mysql:
+    image: mysql:8.0
+    container_name: akd_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: apnikhareedari
+      MYSQL_USER: akd_user
+      MYSQL_PASSWORD: akd_password
+      MYSQL_ROOT_PASSWORD: akd_root_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - akd_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pakd_root_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - akd
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: akd_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - akd
+
+networks:
+  akd:
+    driver: bridge
+
+volumes:
+  akd_mysql_data:
