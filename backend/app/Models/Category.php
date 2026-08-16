@@ -30,11 +30,6 @@ class Category extends Model
         ];
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
-
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
