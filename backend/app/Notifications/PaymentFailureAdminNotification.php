@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Notifications;
+
+use App\Models\Order;
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+class PaymentFailureAdminNotification extends Notification
+{
+    use Queueable;
+
+    public function __construct(protected Order $order, protected string $reason) {}
+
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject("Payment Failed - Order {$this->order->order_number}")
+            ->greeting('A customer payment attempt failed')
+            ->line("Order **{$this->order->order_number}** for {$this->order->shipping_full_name} failed to charge.")
+            ->line("Reason: {$this->reason}");
+    }
+}

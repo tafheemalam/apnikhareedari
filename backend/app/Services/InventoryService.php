@@ -7,7 +7,9 @@ use App\Models\InventoryTransaction;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\User;
+use App\Notifications\LowStockAdminNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use RuntimeException;
 
 class InventoryService
@@ -96,6 +98,8 @@ class InventoryService
 
             $this->logTransaction($product, $variation, $type, -$amount, $previous, $inventory->quantity, $referenceType, $referenceId, $notes, $actor);
 
+            $this->notifyIfLowOrOutOfStock($inventory);
+
             return $inventory;
         });
     }
@@ -118,6 +122,8 @@ class InventoryService
 
             $this->logTransaction($product, $variation, 'adjustment', $newQuantity - $previous, $previous, $newQuantity, notes: $notes, actor: $actor);
 
+            $this->notifyIfLowOrOutOfStock($inventory);
+
             return $inventory;
         });
     }
@@ -130,6 +136,19 @@ class InventoryService
         $inventory = $variation ? $variation->inventory : $product->inventory;
 
         return $inventory !== null && $inventory->quantity >= $requested;
+    }
+
+    protected function notifyIfLowOrOutOfStock(Inventory $inventory): void
+    {
+        if ($inventory->quantity > $inventory->low_stock_threshold) {
+            return;
+        }
+
+        $recipients = User::role(['Super Admin', 'Admin', 'Inventory Manager'])->get();
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new LowStockAdminNotification($inventory->fresh(['product', 'variation.options'])));
+        }
     }
 
     protected function lockInventoryRow(Product $product, ?ProductVariation $variation): Inventory

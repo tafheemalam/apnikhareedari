@@ -12,14 +12,18 @@ use App\Models\Cart;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Notifications\CustomerRegisteredNotification;
+use App\Services\CartService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
+    public function __construct(protected CartService $cartService) {}
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = DB::transaction(function () use ($request) {
@@ -40,6 +44,8 @@ class AuthController extends Controller
         $user->notify(new CustomerRegisteredNotification);
         event(new Registered($user));
 
+        $this->cartService->mergeGuestCartIntoUser($request->header('X-Cart-Token'), $user);
+
         $token = $user->createToken('customer')->plainTextToken;
 
         return $this->success([
@@ -59,6 +65,8 @@ class AuthController extends Controller
         if (! $user->is_active) {
             return $this->error('This account has been deactivated', null, 403);
         }
+
+        $this->cartService->mergeGuestCartIntoUser($request->header('X-Cart-Token'), $user);
 
         $token = $user->createToken('auth')->plainTextToken;
 
