@@ -144,7 +144,7 @@ class InventoryService
             return;
         }
 
-        $recipients = User::role(['Super Admin', 'Admin', 'Inventory Manager'])->get();
+        $recipients = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['Super Admin', 'Admin', 'Inventory Manager']))->get();
 
         if ($recipients->isNotEmpty()) {
             Notification::send($recipients, new LowStockAdminNotification($inventory->fresh(['product', 'variation.options'])));

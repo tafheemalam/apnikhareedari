@@ -14,7 +14,8 @@ class AdminUserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $admins = User::role(['Super Admin', 'Admin', 'Inventory Manager', 'Order Manager'])
+        $adminRoles = ['Super Admin', 'Admin', 'Inventory Manager', 'Order Manager'];
+        $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name', $adminRoles))
             ->with('roles')
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%'))
             ->latest()

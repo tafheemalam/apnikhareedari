@@ -224,7 +224,7 @@ class CheckoutService
             Notification::route('mail', $order->shipping_email)->notify(new OrderPlacedNotification($order));
         }
 
-        $admins = User::role(['Super Admin', 'Admin', 'Order Manager'])->get();
+        $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['Super Admin', 'Admin', 'Order Manager']))->get();
 
         if ($admins->isNotEmpty()) {
             Notification::send($admins, new NewOrderAdminNotification($order));
