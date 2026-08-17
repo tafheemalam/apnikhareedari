@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             SettingsSeeder::class,
             ShippingSeeder::class,
+            CatalogSeeder::class,
+            CouponsSeeder::class,
+            SampleOrdersSeeder::class,
         ]);
     }
 }
