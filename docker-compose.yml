@@ -17,6 +17,21 @@ services:
     networks:
       - akd
 
+  queue:
+    build:
+      context: ./docker/php
+    container_name: akd_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    command: php artisan queue:work --tries=3 --sleep=1
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - akd
+
   webserver:
     image: nginx:stable-alpine
     container_name: akd_webserver

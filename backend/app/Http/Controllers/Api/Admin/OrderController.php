@@ -27,7 +27,7 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orders = Order::query()
-            ->with('user:id,name,email')
+            ->with('user:id,name,email', 'items')
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = $request->string('search');
                 $q->where(function ($sub) use ($term) {

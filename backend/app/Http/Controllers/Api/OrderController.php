@@ -18,6 +18,7 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orders = $request->user()->orders()
+            ->with('items')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->latest('placed_at')
             ->paginate($request->integer('per_page', 10));
