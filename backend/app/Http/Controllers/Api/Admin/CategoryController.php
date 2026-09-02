@@ -23,7 +23,6 @@ class CategoryController extends Controller
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('parent_id'), fn ($q) => $q->where('parent_id', $request->input('parent_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->boolean('status')))
-            ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate($request->integer('per_page', 20));
 

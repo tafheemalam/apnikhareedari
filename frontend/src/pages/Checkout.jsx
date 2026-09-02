@@ -8,8 +8,9 @@ import * as addressService from '../services/addressService';
 import * as catalogService from '../services/catalogService';
 import * as orderService from '../services/orderService';
 import { formatCurrency, extractErrorMessage } from '../utils/format';
+import { isValidPhone, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/validators';
 import Button from '../components/ui/Button';
-import { Input, Textarea } from '../components/ui/FormField';
+import { Input, Textarea, Checkbox } from '../components/ui/FormField';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const EMPTY_FORM = {
@@ -21,6 +22,15 @@ const EMPTY_FORM = {
   shipping_area: '',
   shipping_postal_code: '',
   delivery_notes: '',
+};
+
+const EMPTY_ALT_SHIPPING = {
+  full_name: '',
+  phone: '',
+  address: '',
+  city: '',
+  area: '',
+  postal_code: '',
 };
 
 export default function Checkout() {
@@ -37,7 +47,7 @@ export default function Checkout() {
     ...EMPTY_FORM,
     shipping_full_name: user?.name || '',
     shipping_email: user?.email || '',
-    shipping_phone: user?.phone || '',
+    shipping_phone: sanitizePhoneDigits(user?.phone || ''),
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [couponCode, setCouponCode] = useState('');
@@ -45,6 +55,30 @@ export default function Checkout() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [shipping, setShipping] = useState({ amount: 0, zone: null });
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [shipToDifferentAddress, setShipToDifferentAddress] = useState(false);
+  const [altShipping, setAltShipping] = useState(EMPTY_ALT_SHIPPING);
+
+  function validate() {
+    if (!useNewAddress) return true;
+
+    const next = {};
+    if (!form.shipping_full_name.trim()) next.shipping_full_name = 'Full name is required.';
+    if (!isValidPhone(form.shipping_phone, { required: true })) next.shipping_phone = 'Enter a valid Pakistani mobile number, e.g. 0300 1234567.';
+    if (!form.shipping_address.trim()) next.shipping_address = 'Address is required.';
+    if (!form.shipping_city.trim()) next.shipping_city = 'City is required.';
+
+    if (shipToDifferentAddress) {
+      if (!altShipping.full_name.trim()) next.alt_full_name = 'Full name is required.';
+      if (!isValidPhone(altShipping.phone, { required: true })) next.alt_phone = 'Enter a valid Pakistani mobile number, e.g. 0300 1234567.';
+      if (!altShipping.address.trim()) next.alt_address = 'Address is required.';
+      if (!altShipping.city.trim()) next.alt_city = 'City is required.';
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -61,7 +95,9 @@ export default function Checkout() {
     }
   }, [isAuthenticated]);
 
-  const city = useNewAddress ? form.shipping_city : addresses.find((a) => a.id === selectedAddressId)?.city;
+  const city = useNewAddress
+    ? (shipToDifferentAddress ? altShipping.city : form.shipping_city)
+    : addresses.find((a) => a.id === selectedAddressId)?.city;
 
   useEffect(() => {
     if (!city || !subtotal) return;
@@ -94,6 +130,7 @@ export default function Checkout() {
       toast.error('Your cart is empty');
       return;
     }
+    if (!validate()) return;
 
     setSubmitting(true);
     try {
@@ -105,6 +142,23 @@ export default function Checkout() {
 
       if (!useNewAddress && selectedAddressId) {
         payload.address_id = selectedAddressId;
+      } else if (shipToDifferentAddress) {
+        Object.assign(payload, {
+          billing_same_as_shipping: false,
+          billing_full_name: form.shipping_full_name,
+          billing_phone: form.shipping_phone,
+          billing_address: form.shipping_address,
+          billing_city: form.shipping_city,
+          billing_area: form.shipping_area,
+          billing_postal_code: form.shipping_postal_code,
+          shipping_full_name: altShipping.full_name,
+          shipping_phone: altShipping.phone,
+          shipping_email: form.shipping_email,
+          shipping_address: altShipping.address,
+          shipping_city: altShipping.city,
+          shipping_area: altShipping.area,
+          shipping_postal_code: altShipping.postal_code,
+        });
       } else {
         Object.assign(payload, {
           shipping_full_name: form.shipping_full_name,
@@ -119,6 +173,22 @@ export default function Checkout() {
 
       const order = await orderService.checkout(payload);
       await refreshCart();
+
+      if (saveAddress && useNewAddress) {
+        try {
+          await addressService.createAddress({
+            full_name: form.shipping_full_name,
+            phone: form.shipping_phone,
+            address_line: form.shipping_address,
+            city: form.shipping_city,
+            area: form.shipping_area,
+            postal_code: form.shipping_postal_code,
+          });
+        } catch {
+          // Order already placed successfully — don't block on a non-critical save.
+        }
+      }
+
       toast.success('Order placed successfully!');
       navigate(`/order-confirmation/${order.order_number}`, { state: { order } });
     } catch (err) {
@@ -145,10 +215,12 @@ export default function Checkout() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Checkout</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-bold text-slate-900">Delivery Address</h2>
+            <h2 className="mb-4 text-sm font-bold text-slate-900">
+              {useNewAddress && shipToDifferentAddress ? 'Billing Address' : 'Delivery Address'}
+            </h2>
 
             {isAuthenticated && addresses.length > 0 && (
               <div className="mb-4 space-y-2">
@@ -180,13 +252,98 @@ export default function Checkout() {
 
             {useNewAddress && (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input label="Full Name" required value={form.shipping_full_name} onChange={(e) => setForm((f) => ({ ...f, shipping_full_name: e.target.value }))} />
-                <Input label="Mobile Number" required value={form.shipping_phone} onChange={(e) => setForm((f) => ({ ...f, shipping_phone: e.target.value }))} />
+                <Input
+                  label="Full Name"
+                  required
+                  error={errors.shipping_full_name}
+                  value={form.shipping_full_name}
+                  onChange={(e) => setForm((f) => ({ ...f, shipping_full_name: e.target.value }))}
+                />
+                <Input
+                  label="Mobile Number"
+                  type="tel"
+                  required
+                  placeholder="0300 1234567"
+                  error={errors.shipping_phone}
+                  value={formatPhoneDisplay(form.shipping_phone)}
+                  onChange={(e) => setForm((f) => ({ ...f, shipping_phone: sanitizePhoneDigits(e.target.value) }))}
+                />
                 <Input label="Email" type="email" className="sm:col-span-2" value={form.shipping_email} onChange={(e) => setForm((f) => ({ ...f, shipping_email: e.target.value }))} />
-                <Input label="Address" required className="sm:col-span-2" value={form.shipping_address} onChange={(e) => setForm((f) => ({ ...f, shipping_address: e.target.value }))} />
-                <Input label="City" required value={form.shipping_city} onChange={(e) => setForm((f) => ({ ...f, shipping_city: e.target.value }))} />
+                <Input
+                  label="Address"
+                  required
+                  className="sm:col-span-2"
+                  error={errors.shipping_address}
+                  value={form.shipping_address}
+                  onChange={(e) => setForm((f) => ({ ...f, shipping_address: e.target.value }))}
+                />
+                <Input
+                  label="City"
+                  required
+                  error={errors.shipping_city}
+                  value={form.shipping_city}
+                  onChange={(e) => setForm((f) => ({ ...f, shipping_city: e.target.value }))}
+                />
                 <Input label="Area" value={form.shipping_area} onChange={(e) => setForm((f) => ({ ...f, shipping_area: e.target.value }))} />
                 <Input label="Postal Code" value={form.shipping_postal_code} onChange={(e) => setForm((f) => ({ ...f, shipping_postal_code: e.target.value }))} />
+
+                <div className="sm:col-span-2 space-y-2 border-t border-slate-100 pt-3">
+                  <Checkbox
+                    label="Save this information for future orders"
+                    checked={saveAddress}
+                    onChange={(e) => setSaveAddress(e.target.checked)}
+                  />
+                  <Checkbox
+                    label="Ship to a different address"
+                    checked={shipToDifferentAddress}
+                    onChange={(e) => setShipToDifferentAddress(e.target.checked)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {useNewAddress && shipToDifferentAddress && (
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <h3 className="mb-3 text-sm font-bold text-slate-900">Shipping Address</h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Input
+                    label="Full Name"
+                    required
+                    error={errors.alt_full_name}
+                    value={altShipping.full_name}
+                    onChange={(e) => setAltShipping((f) => ({ ...f, full_name: e.target.value }))}
+                  />
+                  <Input
+                    label="Mobile Number"
+                    type="tel"
+                    required
+                    placeholder="0300 1234567"
+                    error={errors.alt_phone}
+                    value={formatPhoneDisplay(altShipping.phone)}
+                    onChange={(e) => setAltShipping((f) => ({ ...f, phone: sanitizePhoneDigits(e.target.value) }))}
+                  />
+                  <Input
+                    label="Address"
+                    required
+                    className="sm:col-span-2"
+                    error={errors.alt_address}
+                    value={altShipping.address}
+                    onChange={(e) => setAltShipping((f) => ({ ...f, address: e.target.value }))}
+                  />
+                  <Input
+                    label="City"
+                    required
+                    error={errors.alt_city}
+                    value={altShipping.city}
+                    onChange={(e) => setAltShipping((f) => ({ ...f, city: e.target.value }))}
+                  />
+                  <Input label="Area" value={altShipping.area} onChange={(e) => setAltShipping((f) => ({ ...f, area: e.target.value }))} />
+                  <Input
+                    label="Postal Code"
+                    value={altShipping.postal_code}
+                    onChange={(e) => setAltShipping((f) => ({ ...f, postal_code: e.target.value }))}
+                  />
+                </div>
               </div>
             )}
 

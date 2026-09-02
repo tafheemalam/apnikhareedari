@@ -25,7 +25,7 @@ class ImageUploadService
     {
         $filename = $directory.'/'.Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
 
-        $image = $this->manager->read($file->getRealPath());
+        $image = $this->manager->decodePath($file->getRealPath());
 
         if ($image->width() > $maxWidth) {
             $image->scale(width: $maxWidth);

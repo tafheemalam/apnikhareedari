@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import logoIcon from '../../assets/logo-icon.png';
 
 const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: '📊', end: true, permission: 'view-dashboard' },
@@ -10,7 +11,9 @@ const NAV_ITEMS = [
   { to: '/admin/orders', label: 'Orders', icon: '🧾', permission: 'manage-orders' },
   { to: '/admin/coupons', label: 'Coupons', icon: '🏷️', permission: 'manage-coupons' },
   { to: '/admin/reviews', label: 'Reviews', icon: '⭐', permission: 'manage-reviews' },
+  { to: '/admin/questions', label: 'Q&A', icon: '❓', permission: 'manage-questions' },
   { to: '/admin/shipping', label: 'Shipping', icon: '🚚', permission: 'manage-settings' },
+  { to: '/admin/banners', label: 'Banners', icon: '🖼️', permission: 'manage-settings' },
   { to: '/admin/settings', label: 'Settings', icon: '⚙️', permission: 'manage-settings' },
   { to: '/admin/users', label: 'Admin Users', icon: '👤', permission: 'manage-admins' },
 ];
@@ -29,7 +32,10 @@ export default function AdminLayout() {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link to="/admin" className="text-lg font-bold text-white">ApniKhareedari</Link>
+          <Link to="/admin" className="flex items-center gap-2">
+            <img src={logoIcon} alt="" className="h-8 w-auto" />
+            <span className="text-lg font-bold text-white">ApniKhareedari</span>
+          </Link>
           <button className="text-slate-400 lg:hidden" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <nav className="flex flex-col gap-1 px-3">

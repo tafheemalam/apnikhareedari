@@ -16,10 +16,12 @@ import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
+import VerifyEmail from './pages/VerifyEmail';
 import ContactUs from './pages/ContactUs';
 import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import ShippingInfo from './pages/ShippingInfo';
 import NotFound from './pages/NotFound';
 
 import Login from './pages/auth/Login';
@@ -42,7 +44,9 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminOrderDetails from './pages/admin/AdminOrderDetails';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReviews from './pages/admin/AdminReviews';
+import AdminQuestions from './pages/admin/AdminQuestions';
 import AdminShipping from './pages/admin/AdminShipping';
+import AdminBanners from './pages/admin/AdminBanners';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminUsers from './pages/admin/AdminUsers';
 
@@ -61,14 +65,16 @@ export default function App() {
                   <Route path="search" element={<ProductListing mode="search" />} />
                   <Route path="products/:slug" element={<ProductDetails />} />
                   <Route path="cart" element={<Cart />} />
-                  <Route path="checkout" element={<Checkout />} />
                   <Route path="order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+                  <Route path="verify-email/:id/:hash" element={<VerifyEmail />} />
                   <Route path="contact" element={<ContactUs />} />
                   <Route path="about" element={<AboutUs />} />
                   <Route path="privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="terms" element={<Terms />} />
+                  <Route path="shipping-info" element={<ShippingInfo />} />
 
                   <Route element={<ProtectedRoute />}>
+                    <Route path="checkout" element={<Checkout />} />
                     <Route path="account" element={<AccountLayout />}>
                       <Route index element={<MyOrders />} />
                       <Route path="orders" element={<MyOrders />} />
@@ -101,7 +107,9 @@ export default function App() {
                     <Route path="orders/:id" element={<AdminOrderDetails />} />
                     <Route path="coupons" element={<AdminCoupons />} />
                     <Route path="reviews" element={<AdminReviews />} />
+                    <Route path="questions" element={<AdminQuestions />} />
                     <Route path="shipping" element={<AdminShipping />} />
+                    <Route path="banners" element={<AdminBanners />} />
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="users" element={<AdminUsers />} />
                   </Route>

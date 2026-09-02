@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as productService from '../../services/admin/productService';
 import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage, formatCurrency } from '../../utils/format';
@@ -17,6 +17,17 @@ export default function ProductVariationManager({ productId, variations, onChang
   const [options, setOptions] = useState([{ attribute_name: '', attribute_value: '' }]);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [newImagePreview, setNewImagePreview] = useState(null);
+
+  useEffect(() => {
+    if (!form.image) {
+      setNewImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(form.image);
+    setNewImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [form.image]);
 
   function openCreate() {
     setEditing(null);
@@ -95,6 +106,7 @@ export default function ProductVariationManager({ productId, variations, onChang
         <table className="w-full text-left text-sm">
           <thead className="text-xs font-semibold uppercase text-slate-500">
             <tr>
+              <th className="py-2">Image</th>
               <th className="py-2">Variation</th>
               <th className="py-2">SKU</th>
               <th className="py-2">Price</th>
@@ -105,6 +117,15 @@ export default function ProductVariationManager({ productId, variations, onChang
           <tbody className="divide-y divide-slate-100">
             {variations.map((v) => (
               <tr key={v.id}>
+                <td className="py-2">
+                  {v.image_url ? (
+                    <img src={v.image_url} alt="" className="h-10 w-10 rounded-lg border border-slate-200 object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[9px] text-slate-400">
+                      None
+                    </div>
+                  )}
+                </td>
                 <td className="py-2">{v.label}</td>
                 <td className="py-2 text-slate-500">{v.sku}</td>
                 <td className="py-2">{formatCurrency(v.current_price)}</td>
@@ -161,6 +182,18 @@ export default function ProductVariationManager({ productId, variations, onChang
           )}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Image</label>
+            {editing?.image_url && !form.image && (
+              <div className="mb-2 flex items-center gap-2">
+                <img src={editing.image_url} alt="" className="h-14 w-14 rounded-lg border border-slate-200 object-cover" />
+                <span className="text-xs text-slate-500">Current image — choose a file below to replace it.</span>
+              </div>
+            )}
+            {newImagePreview && (
+              <div className="mb-2 flex items-center gap-2">
+                <img src={newImagePreview} alt="" className="h-14 w-14 rounded-lg border border-emerald-400 object-cover" />
+                <span className="text-xs text-emerald-700">New image selected — will replace the current one on save.</span>
+              </div>
+            )}
             <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, image: e.target.files[0] }))} className="text-sm" />
           </div>
           <Checkbox label="Active" checked={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))} />

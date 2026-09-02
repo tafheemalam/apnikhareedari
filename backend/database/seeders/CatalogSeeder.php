@@ -36,7 +36,6 @@ class CatalogSeeder extends Seeder
                 ['Wireless Bluetooth Earbuds', 3999, 2999, 'Crisp sound, noise isolation, and 24-hour battery with the case.', true, false, true],
                 ['Fast Charge Power Bank 20000mAh', 3499, null, 'Charge two devices at once with fast-charging support.', false, false, true],
                 ['USB-C Charging Cable 1.5m (3-pack)', 899, 699, 'Durable braided cables for daily use.', false, false, false],
-                ['Bluetooth Smart Watch', 6999, 5499, 'Track fitness, calls, and notifications on the go.', true, true, false],
             ],
         ],
         'Fashion' => [
@@ -52,8 +51,16 @@ class CatalogSeeder extends Seeder
                 ['Running Sports Shoes', 3999, 3299, 'Cushioned sole for all-day comfort during workouts.', true, false, false, ['Size' => ['40', '41', '42', '43', '44']]],
                 ['Leather Formal Shoes', 4499, null, 'Genuine leather formal shoes for office wear.', false, false, false, ['Size' => ['40', '41', '42', '43', '44']]],
             ],
+            'Bags & Accessories' => [
+                ['Canvas Tote Bag', 1799, 1399, 'Spacious canvas tote for everyday errands and shopping.', true, false, false],
+                ["Men's Leather Wallet", 1499, null, 'Genuine leather bifold wallet with card slots.', false, false, false],
+            ],
+            'Jewelry & Watches' => [
+                ['Bluetooth Smart Watch', 6999, 5499, 'Track fitness, calls, and notifications on the go.', true, true, false],
+                ['Rose Gold Plated Necklace Set', 2299, 1799, 'Elegant necklace and earrings set for special occasions.', false, false, false],
+            ],
         ],
-        'Kids' => [
+        "Kids' Items" => [
             'Toys' => [
                 ['Building Blocks Set 200pcs', 2499, 1999, 'Creative building blocks that spark imagination.', true, false, false],
                 ['Remote Control Racing Car', 3499, null, 'Fast and durable RC car for indoor and outdoor play.', false, true, true],
@@ -64,17 +71,45 @@ class CatalogSeeder extends Seeder
             ],
             'Baby Products' => [
                 ['Baby Feeding Bottle Set', 1299, 999, 'BPA-free feeding bottles, pack of 3.', false, false, false],
-                ['Soft Baby Blanket', 1599, null, 'Ultra-soft blanket safe for sensitive skin.', false, true, false],
+            ],
+            "Kids' Clothing" => [
+                ['Kids Cotton T-Shirt Set (3-pack)', 1599, 1299, 'Soft cotton tees in fun prints, pack of 3.', false, false, true, ['Size' => ['2-3Y', '4-5Y', '6-7Y', '8-9Y']]],
+                ["Girls' Printed Frock", 1999, 1599, 'Comfortable everyday frock with a playful print.', true, false, false, ['Size' => ['2-3Y', '4-5Y', '6-7Y', '8-9Y']]],
+            ],
+            "Kids' Footwear" => [
+                ['Kids Velcro Sneakers', 1899, 1499, 'Easy velcro-strap sneakers for active kids.', false, true, false, ['Size' => ['28', '29', '30', '31', '32']]],
             ],
         ],
-        'Home & Living' => [
+        'Home' => [
+            'Home Decor' => [
+                ['LED Wall Clock', 1999, 1599, 'Modern LED wall clock with silent movement.', false, true, false],
+                ['Decorative Cushion Covers (Set of 5)', 1499, null, 'Add color to your living room in minutes.', false, false, false],
+            ],
+            'Bedding & Linen' => [
+                ['Soft Baby Blanket', 1599, null, 'Ultra-soft blanket safe for sensitive skin.', false, true, false],
+                ['Cotton Bedsheet Set (Queen, 3 pcs)', 2999, 2399, 'Breathable cotton bedsheet with two pillow covers.', true, false, false],
+            ],
+            'Furniture' => [
+                ['Foldable Study Table', 4999, 3999, 'Compact foldable table, ideal for small spaces.', false, false, false],
+            ],
+            'Lighting' => [
+                ['LED Table Lamp', 1699, 1299, 'Adjustable LED lamp with 3 brightness levels.', true, false, false],
+            ],
+        ],
+        'Kitchen' => [
             'Kitchen & Dining' => [
                 ['Non-Stick Cookware Set (5 pcs)', 5999, 4799, 'Durable non-stick cookware for everyday cooking.', true, false, true],
                 ['Stainless Steel Dinner Set (24 pcs)', 6499, null, 'Elegant dinner set for family gatherings.', false, false, false],
             ],
-            'Home Decor' => [
-                ['LED Wall Clock', 1999, 1599, 'Modern LED wall clock with silent movement.', false, true, false],
-                ['Decorative Cushion Covers (Set of 5)', 1499, null, 'Add color to your living room in minutes.', false, false, false],
+            'Kitchen Appliances' => [
+                ['2-Slice Electric Toaster', 3499, 2799, 'Quick and even toasting with adjustable browning control.', true, false, false],
+                ['Electric Kettle 1.7L', 2499, null, 'Fast-boil electric kettle with auto shut-off.', false, true, false],
+            ],
+            'Storage & Containers' => [
+                ['Airtight Food Storage Containers (Set of 5)', 1299, 999, 'BPA-free airtight containers to keep food fresh longer.', false, false, true],
+            ],
+            'Cutlery & Utensils' => [
+                ['Stainless Steel Cutlery Set (24 pcs)', 2199, 1799, 'Rust-resistant cutlery set for everyday dining.', false, false, false],
             ],
         ],
     ];
@@ -133,7 +168,7 @@ SVG;
         }
 
         $skuPrefix = strtoupper(Str::slug($subName, ''));
-        $sku = substr($skuPrefix, 0, 6).'-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
+        $sku = substr($skuPrefix, 0, 4).$category->id.'-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
 
         $product = Product::create([
             'category_id' => $category->id,

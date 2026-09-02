@@ -1,5 +1,10 @@
 import api from './api';
 
+export async function getBanners() {
+  const { data } = await api.get('/banners');
+  return data.data;
+}
+
 export async function getCategories() {
   const { data } = await api.get('/categories');
   return data.data;
@@ -27,6 +32,21 @@ export async function getProductReviews(productId, page = 1) {
 
 export async function submitReview(productId, payload) {
   const { data } = await api.post(`/products/${productId}/reviews`, payload);
+  return data.data;
+}
+
+export async function getProductQuestions(productId, page = 1) {
+  const { data } = await api.get(`/products/${productId}/questions`, { params: { page } });
+  return data.data;
+}
+
+export async function submitQuestion(productId, payload) {
+  const { data } = await api.post(`/products/${productId}/questions`, payload);
+  return data.data;
+}
+
+export async function submitAnswer(questionId, payload) {
+  const { data } = await api.post(`/questions/${questionId}/answers`, payload);
   return data.data;
 }
 

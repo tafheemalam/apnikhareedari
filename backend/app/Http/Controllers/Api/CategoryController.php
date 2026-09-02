@@ -13,10 +13,13 @@ class CategoryController extends Controller
     {
         $categories = Category::active()
             ->root()
-            ->with(['children' => fn ($q) => $q->active()->orderBy('sort_order')])
-            ->orderBy('sort_order')
+            ->withCount('products')
+            ->with(['children' => fn ($q) => $q->active()->withCount('products')])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn ($category) => $this->withProductsOnly($category))
+            ->filter(fn ($category) => $category->products_count > 0 || $category->children->isNotEmpty())
+            ->values();
 
         return $this->success(CategoryResource::collection($categories));
     }
@@ -25,8 +28,20 @@ class CategoryController extends Controller
     {
         abort_unless($category->status, 404);
 
-        $category->load(['children' => fn ($q) => $q->active()->orderBy('sort_order')]);
+        $category->loadCount('products');
+        $category->load(['children' => fn ($q) => $q->active()->withCount('products')]);
+        $this->withProductsOnly($category);
 
         return $this->success(new CategoryResource($category));
+    }
+
+    protected function withProductsOnly(Category $category): Category
+    {
+        $category->setRelation(
+            'children',
+            $category->children->filter(fn ($child) => $child->products_count > 0)->values()
+        );
+
+        return $category;
     }
 }

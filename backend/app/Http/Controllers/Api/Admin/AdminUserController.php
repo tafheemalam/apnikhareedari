@@ -47,6 +47,10 @@ class AdminUserController extends Controller
 
     public function update(AdminUserRequest $request, User $user): JsonResponse
     {
+        if ($user->id === $request->user()->id && ! in_array('Super Admin', $request->validated('roles'), true)) {
+            return $this->error('You cannot remove your own Super Admin role', null, 422);
+        }
+
         $data = $request->safe()->only(['name', 'email', 'phone']);
 
         if ($request->filled('password')) {

@@ -4,9 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useSite } from '../../context/SiteContext';
 import SearchBar from './SearchBar';
+import logoIcon from '../../assets/logo-icon.png';
 
 export default function Header() {
-  const { categories, settings } = useSite();
+  const { categories } = useSite();
   const { isAuthenticated, user, logout } = useAuth();
   const { itemsCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -23,8 +24,12 @@ export default function Header() {
           ☰
         </button>
 
-        <Link to="/" className="shrink-0 text-xl font-extrabold text-emerald-700">
-          {settings['store.name'] || 'ApniKhareedari'}
+        <Link to="/" className="flex shrink-0 items-center gap-2">
+          <img src={logoIcon} alt="" className="h-9 w-auto" />
+          <span className="text-xl font-extrabold">
+            <span className="text-orange-600">Apni</span>
+            <span className="text-teal-700">Khareedari</span>
+          </span>
         </Link>
 
         <SearchBar className="hidden max-w-xl flex-1 md:flex" />
@@ -87,17 +92,35 @@ export default function Header() {
 
       <nav className="hidden border-t border-slate-100 bg-slate-50 lg:block">
         <div className="mx-auto flex max-w-7xl gap-6 px-4 py-2 text-sm font-medium text-slate-600">
-          <NavLink to="/shop" className={({ isActive }) => (isActive ? 'text-emerald-700' : 'hover:text-emerald-700')}>
+          <NavLink
+            to="/shop"
+            className={({ isActive }) => `flex items-center py-2 ${isActive ? 'text-emerald-700' : 'hover:text-emerald-700'}`}
+          >
             Shop
           </NavLink>
           {categories.map((cat) => (
-            <NavLink
-              key={cat.id}
-              to={`/categories/${cat.slug}`}
-              className={({ isActive }) => (isActive ? 'text-emerald-700' : 'hover:text-emerald-700')}
-            >
-              {cat.name}
-            </NavLink>
+            <div key={cat.id} className="group relative">
+              <NavLink
+                to={`/categories/${cat.slug}`}
+                className={({ isActive }) => `flex items-center gap-1 py-2 ${isActive ? 'text-emerald-700' : 'hover:text-emerald-700'}`}
+              >
+                {cat.name}
+                {cat.children?.length > 0 && <span className="text-[10px]">▾</span>}
+              </NavLink>
+              {cat.children?.length > 0 && (
+                <div className="invisible absolute left-0 top-full z-50 min-w-48 rounded-lg border border-slate-200 bg-white py-2 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100">
+                  {cat.children.map((child) => (
+                    <Link
+                      key={child.id}
+                      to={`/categories/${child.slug}`}
+                      className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-700"
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </nav>
@@ -107,9 +130,20 @@ export default function Header() {
           <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
             <Link to="/shop" onClick={() => setMobileOpen(false)}>Shop</Link>
             {categories.map((cat) => (
-              <Link key={cat.id} to={`/categories/${cat.slug}`} onClick={() => setMobileOpen(false)}>
-                {cat.name}
-              </Link>
+              <div key={cat.id}>
+                <Link to={`/categories/${cat.slug}`} onClick={() => setMobileOpen(false)}>
+                  {cat.name}
+                </Link>
+                {cat.children?.length > 0 && (
+                  <div className="ml-3 mt-1 flex flex-col gap-1 border-l border-slate-200 pl-3 text-slate-500">
+                    {cat.children.map((child) => (
+                      <Link key={child.id} to={`/categories/${child.slug}`} onClick={() => setMobileOpen(false)}>
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             <hr className="my-2" />
             {isAuthenticated ? (

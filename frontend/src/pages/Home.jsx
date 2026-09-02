@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as catalogService from '../services/catalogService';
 import ProductCard from '../components/ProductCard';
+import HeroSlider from '../components/HeroSlider';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useSite } from '../context/SiteContext';
 
@@ -29,6 +30,7 @@ function ProductRow({ title, products, viewAllHref }) {
 export default function Home() {
   const { categories } = useSite();
   const [state, setState] = useState({ featured: [], newArrivals: [], bestSellers: [], onSale: [], loading: true });
+  const [banners, setBanners] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -51,29 +53,36 @@ export default function Home() {
       }
     }
     load();
+    catalogService.getBanners().then(setBanners).catch(() => {});
   }, []);
 
   return (
     <div>
-      <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-16 sm:py-24">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide">
-            Pakistan's Trusted Online Store
-          </span>
-          <h1 className="max-w-xl text-3xl font-extrabold leading-tight sm:text-5xl">
-            Shop Everything You Need, Delivered to Your Door
-          </h1>
-          <p className="max-w-lg text-emerald-100">
-            Electronics, fashion, home essentials and more — with Cash on Delivery available nationwide.
-          </p>
-          <Link
-            to="/shop"
-            className="mt-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50"
-          >
-            Start Shopping
-          </Link>
+      {banners.length > 0 ? (
+        <div className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
+          <HeroSlider banners={banners} />
         </div>
-      </section>
+      ) : (
+        <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white">
+          <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-16 sm:py-24">
+            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide">
+              Pakistan's Trusted Online Store
+            </span>
+            <h1 className="max-w-xl text-3xl font-extrabold leading-tight sm:text-5xl">
+              Shop Everything You Need, Delivered to Your Door
+            </h1>
+            <p className="max-w-lg text-emerald-100">
+              Electronics, fashion, home essentials and more — with Cash on Delivery available nationwide.
+            </p>
+            <Link
+              to="/shop"
+              className="mt-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50"
+            >
+              Start Shopping
+            </Link>
+          </div>
+        </section>
+      )}
 
       {categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-8">

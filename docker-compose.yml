@@ -45,6 +45,21 @@ services:
       - app
     networks:
       - akd
+    # OPcache only compiles PHP into shared memory on first use per app-container
+    # start (see docker/php/opcache.ini), so the very first real request after
+    # any restart pays a multi-second one-time cost. This healthcheck pings a
+    # real API route every few seconds, so that cost lands on an internal ping
+    # instead of a customer's — by the time anyone loads the site, it's warm.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1/api/products && wget -q -O /dev/null http://127.0.0.1/api/categories && wget -q -O /dev/null http://127.0.0.1/api/settings/public",
+        ]
+      interval: 10s
+      timeout: 8s
+      retries: 3
+      start_period: 5s
 
   mysql:
     image: mysql:8.0

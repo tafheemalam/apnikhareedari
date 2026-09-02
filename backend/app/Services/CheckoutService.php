@@ -29,7 +29,7 @@ class CheckoutService
     /**
      * @throws RuntimeException on stock, coupon, or payment failure — caller should render a 422.
      */
-    public function process(Cart $cart, array $data, ?User $user): Order
+    public function process(Cart $cart, array $data, User $user): Order
     {
         $cart->loadMissing('items.product', 'items.variation');
 
@@ -78,7 +78,7 @@ class CheckoutService
         return DB::transaction(function () use ($cart, $data, $user, $shippingFields, $subtotal, $discount, $coupon, $shipping, $tax, $total) {
             $order = Order::create(array_merge($shippingFields, [
                 'order_number' => $this->generateOrderNumber(),
-                'user_id' => $user?->id,
+                'user_id' => $user->id,
                 'coupon_id' => $coupon?->id,
                 'status' => 'pending',
                 'payment_method' => $data['payment_method'],
@@ -119,7 +119,7 @@ class CheckoutService
                 $coupon->increment('used_count');
                 CouponUsage::create([
                     'coupon_id' => $coupon->id,
-                    'user_id' => $user?->id,
+                    'user_id' => $user->id,
                     'order_id' => $order->id,
                     'discount_amount' => $discount,
                 ]);
@@ -161,12 +161,12 @@ class CheckoutService
         }
     }
 
-    protected function resolveShippingFields(array $data, ?User $user): array
+    protected function resolveShippingFields(array $data, User $user): array
     {
         if (! empty($data['address_id'])) {
             $address = Address::findOrFail($data['address_id']);
 
-            if (! $user || $address->user_id !== $user->id) {
+            if ($address->user_id !== $user->id) {
                 throw new RuntimeException('The selected address does not belong to your account.');
             }
 
@@ -193,7 +193,7 @@ class CheckoutService
         return [
             'shipping_full_name' => $data['shipping_full_name'],
             'shipping_phone' => $data['shipping_phone'],
-            'shipping_email' => $data['shipping_email'] ?? $user?->email,
+            'shipping_email' => $data['shipping_email'] ?? $user->email,
             'shipping_address' => $data['shipping_address'],
             'shipping_city' => $data['shipping_city'],
             'shipping_area' => $data['shipping_area'] ?? null,

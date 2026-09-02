@@ -2,12 +2,33 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductSearchTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_browsing_a_parent_category_shows_products_from_its_subcategories(): void
+    {
+        $parent = Category::factory()->create(['slug' => 'electronics']);
+        $mobiles = Category::factory()->create(['parent_id' => $parent->id, 'slug' => 'mobiles']);
+        $laptops = Category::factory()->create(['parent_id' => $parent->id, 'slug' => 'laptops']);
+        $otherParent = Category::factory()->create(['slug' => 'fashion']);
+
+        $this->createProductWithStock(10, ['name' => 'Smartphone X', 'category_id' => $mobiles->id]);
+        $this->createProductWithStock(10, ['name' => 'Ultrabook Pro', 'category_id' => $laptops->id]);
+        $this->createProductWithStock(10, ['name' => 'T-Shirt', 'category_id' => $otherParent->id]);
+
+        $response = $this->getJson('/api/products?category_slug=electronics');
+
+        $response->assertOk();
+        $names = collect($response->json('data.data'))->pluck('name');
+        $this->assertTrue($names->contains('Smartphone X'));
+        $this->assertTrue($names->contains('Ultrabook Pro'));
+        $this->assertFalse($names->contains('T-Shirt'));
+    }
 
     public function test_products_can_be_searched_by_name(): void
     {

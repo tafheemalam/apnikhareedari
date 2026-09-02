@@ -38,8 +38,23 @@ export default function AdminProductForm() {
   const [form, setForm] = useState(EMPTY);
   const [product, setProduct] = useState(null);
   const [newImages, setNewImages] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState(null);
+  const [settingPrimaryId, setSettingPrimaryId] = useState(null);
+
+  // Revoke the object URLs whenever the selection changes or the page unmounts,
+  // otherwise each preview leaks memory for the life of the tab.
+  useEffect(() => {
+    return () => newImagePreviews.forEach((url) => URL.revokeObjectURL(url));
+  }, [newImagePreviews]);
+
+  function handleImageSelect(e) {
+    const files = Array.from(e.target.files);
+    setNewImages(files);
+    setNewImagePreviews(files.map((file) => URL.createObjectURL(file)));
+  }
 
   useEffect(() => {
     categoryService.getCategories({ per_page: 100 }).then((data) => setCategories(data.data));
@@ -84,6 +99,7 @@ export default function AdminProductForm() {
         await productService.updateProduct(id, payload);
         toast.success('Product updated successfully');
         setNewImages([]);
+        setNewImagePreviews([]);
         loadProduct();
       } else {
         const created = await productService.createProduct(payload);
@@ -98,13 +114,23 @@ export default function AdminProductForm() {
   }
 
   async function handleDeleteImage(imageId) {
-    await productService.deleteProductImage(id, imageId);
-    loadProduct();
+    setDeletingImageId(imageId);
+    try {
+      await productService.deleteProductImage(id, imageId);
+      loadProduct();
+    } finally {
+      setDeletingImageId(null);
+    }
   }
 
   async function handleSetPrimary(imageId) {
-    await productService.setPrimaryImage(id, imageId);
-    loadProduct();
+    setSettingPrimaryId(imageId);
+    try {
+      await productService.setPrimaryImage(id, imageId);
+      loadProduct();
+    } finally {
+      setSettingPrimaryId(null);
+    }
   }
 
   if (loading) return <LoadingSpinner />;
@@ -120,7 +146,18 @@ export default function AdminProductForm() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Select label="Category" required value={form.category_id} onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}>
               <option value="">Select category</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {/* Products can only go in a leaf category — one with no subcategories of its own —
+                  so a parent with children is shown only as a group label, never a selectable option. */}
+              {categories.filter((c) => !c.parent_id).map((parent) => {
+                const children = categories.filter((c) => c.parent_id === parent.id);
+                return children.length > 0 ? (
+                  <optgroup key={parent.id} label={parent.name}>
+                    {children.map((child) => <option key={child.id} value={child.id}>{child.name}</option>)}
+                  </optgroup>
+                ) : (
+                  <option key={parent.id} value={parent.id}>{parent.name}</option>
+                );
+              })}
             </Select>
             <Input label="Product Name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             <Input label="SKU" required value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} />
@@ -155,6 +192,14 @@ export default function AdminProductForm() {
           </div>
         </div>
 
+        {form.has_variations && !isEdit && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+            This product has variations (e.g. Size, Color), so stock is tracked per variation instead of one
+            overall quantity. Create the product first, then you'll be able to add each variation and its
+            stock on the next screen.
+          </div>
+        )}
+
         {!form.has_variations && (
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="mb-4 text-sm font-bold text-slate-900">Stock</h2>
@@ -184,26 +229,60 @@ export default function AdminProductForm() {
           <h2 className="mb-4 text-sm font-bold text-slate-900">Images</h2>
           {product?.images?.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-3">
-              {product.images.map((img) => (
-                <div key={img.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-slate-200">
-                  <img src={img.url} alt="" className="h-full w-full object-cover" />
-                  {img.is_primary && <span className="absolute left-1 top-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Primary</span>}
-                  <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-black/50 py-1">
-                    {!img.is_primary && (
-                      <button type="button" onClick={() => handleSetPrimary(img.id)} className="text-[10px] font-semibold text-white hover:underline">Set primary</button>
+              {product.images.map((img) => {
+                const busy = deletingImageId === img.id || settingPrimaryId === img.id;
+                return (
+                  <div key={img.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-slate-200">
+                    <img src={img.url} alt="" className="h-full w-full object-cover" />
+                    {img.is_primary && <span className="absolute left-1 top-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Primary</span>}
+                    {busy && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      </div>
                     )}
-                    <button type="button" onClick={() => handleDeleteImage(img.id)} className="text-[10px] font-semibold text-red-300 hover:underline">Delete</button>
+                    <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-black/50 py-1">
+                      {!img.is_primary && (
+                        <button type="button" disabled={busy} onClick={() => handleSetPrimary(img.id)} className="text-[10px] font-semibold text-white hover:underline disabled:opacity-50">
+                          Set primary
+                        </button>
+                      )}
+                      <button type="button" disabled={busy} onClick={() => handleDeleteImage(img.id)} className="text-[10px] font-semibold text-red-300 hover:underline disabled:opacity-50">
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
+
+          {newImagePreviews.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-2 text-xs font-medium text-slate-600">
+                {saving ? 'Uploading…' : `${newImagePreviews.length} image(s) selected — will upload when you save`}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {newImagePreviews.map((src, i) => (
+                  <div key={i} className="relative h-24 w-24 overflow-hidden rounded-lg border border-dashed border-slate-300">
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    {saving && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <span className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <input
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) => setNewImages(Array.from(e.target.files))}
-            className="text-sm"
+            disabled={saving}
+            onChange={handleImageSelect}
+            className="text-sm disabled:opacity-50"
           />
           <p className="mt-1 text-xs text-slate-400">You can select multiple images. The first uploaded image becomes primary if none is set.</p>
         </div>

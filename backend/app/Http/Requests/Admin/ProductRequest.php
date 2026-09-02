@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,16 @@ class ProductRequest extends FormRequest
         $isCreate = $this->isMethod('post');
 
         return [
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_id' => [
+                'required',
+                'integer',
+                'exists:categories,id',
+                function ($attribute, $value, $fail) {
+                    if (Category::whereKey($value)->whereHas('children')->exists()) {
+                        $fail('This category has subcategories — assign the product to a specific subcategory instead.');
+                    }
+                },
+            ],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('products', 'slug')->ignore($productId)],
             'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($productId)],
@@ -34,7 +44,7 @@ class ProductRequest extends FormRequest
             'featured' => ['boolean'],
             'new_arrival' => ['boolean'],
             'best_seller' => ['boolean'],
-            'stock_quantity' => [Rule::requiredIf($isCreate && ! $this->boolean('has_variations')), 'integer', 'min:0'],
+            'stock_quantity' => [Rule::requiredIf($isCreate && ! $this->boolean('has_variations')), 'nullable', 'integer', 'min:0'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

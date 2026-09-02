@@ -8,7 +8,6 @@ use App\Http\Resources\OrderResource;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use RuntimeException;
 
 class CheckoutController extends Controller
@@ -20,13 +19,8 @@ class CheckoutController extends Controller
 
     public function store(CheckoutRequest $request): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
-
-        $cart = $user
-            ? $this->cartService->resolveForUser($user)
-            : $this->cartService->resolveForGuest($request->header('X-Cart-Token'));
-
-        $cart->load('items.product', 'items.variation');
+        $user = $request->user();
+        $cart = $this->cartService->resolveForUser($user)->load('items.product', 'items.variation');
 
         try {
             $order = $this->checkoutService->process($cart, $request->validated(), $user);

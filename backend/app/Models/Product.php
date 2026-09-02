@@ -88,6 +88,16 @@ class Product extends Model
         return $this->reviews()->where('status', 'approved');
     }
 
+    public function questions(): HasMany
+    {
+        return $this->hasMany(ProductQuestion::class);
+    }
+
+    public function approvedQuestions(): HasMany
+    {
+        return $this->questions()->where('status', 'approved');
+    }
+
     public function getCurrentPriceAttribute(): string
     {
         return $this->sale_price ?? $this->price;

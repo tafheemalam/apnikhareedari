@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,15 @@ class ProductController extends Controller
             ->search($request->string('search')->toString() ?: null)
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->input('category_id')))
             ->when($request->filled('category_slug'), function ($q) use ($request) {
-                $q->whereHas('category', fn ($cq) => $cq->where('slug', $request->string('category_slug')));
+                // Products can only be assigned to leaf categories, so a parent category
+                // (e.g. "Electronics") has no products of its own — browsing it should
+                // show everything from its subcategories combined, not an empty page.
+                $category = Category::where('slug', $request->string('category_slug'))->first();
+                $categoryIds = $category
+                    ? [$category->id, ...$category->children()->pluck('id')]
+                    : [-1];
+
+                $q->whereIn('category_id', $categoryIds);
             })
             ->when($request->filled('min_price'), fn ($q) => $q->where('price', '>=', $request->input('min_price')))
             ->when($request->filled('max_price'), fn ($q) => $q->where('price', '<=', $request->input('max_price')))

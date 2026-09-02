@@ -1,21 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSite } from '../context/SiteContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Input, Textarea } from '../components/ui/FormField';
 import Button from '../components/ui/Button';
 
 export default function ContactUs() {
   const { settings } = useSite();
+  const { user } = useAuth();
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '', message: '' });
   const [sending, setSending] = useState(false);
+
+  // Auth loads asynchronously, so the user may not be known yet on first render
+  // (this page is public, unlike checkout). Fill in once it arrives, without
+  // clobbering anything already typed.
+  useEffect(() => {
+    if (!user) return;
+    setForm((f) => ({ ...f, name: f.name || user.name || '', email: f.email || user.email || '' }));
+  }, [user]);
 
   function handleSubmit(e) {
     e.preventDefault();
     setSending(true);
     setTimeout(() => {
       toast.success("Thanks for reaching out! We'll get back to you soon.");
-      setForm({ name: '', email: '', message: '' });
+      setForm({ name: user?.name || '', email: user?.email || '', message: '' });
       setSending(false);
     }, 600);
   }
@@ -42,8 +52,8 @@ export default function ContactUs() {
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="mb-2 text-sm font-bold text-slate-900">Customer Support Hours</h2>
-            <p className="text-sm text-slate-600">Monday – Saturday: 9:00 AM – 9:00 PM</p>
-            <p className="text-sm text-slate-600">Sunday: 11:00 AM – 6:00 PM</p>
+            <p className="text-sm text-slate-600">Monday – Saturday: 9:00 AM – 7:00 PM</p>
+            <p className="text-sm text-slate-600">Sunday: Closed</p>
           </div>
         </div>
       </div>

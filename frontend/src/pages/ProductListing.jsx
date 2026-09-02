@@ -100,12 +100,38 @@ export default function ProductListing({ mode = 'shop' }) {
 
             {mode !== 'category' && (
               <div className="mb-4">
-                <p className="mb-2 text-xs font-semibold text-slate-500">CATEGORY</p>
-                <ul className="space-y-1 text-sm">
+                <p className="mb-2 border-b border-slate-200 pb-2 text-xs font-bold tracking-wide text-slate-500">CATEGORY</p>
+                <ul className="space-y-2 text-sm">
                   {categories.map((cat) => (
                     <li key={cat.id}>
-                      <a href={`/categories/${cat.slug}`} className="text-slate-600 hover:text-emerald-700">
+                      <a href={`/categories/${cat.slug}`} className="font-medium text-slate-700 hover:text-emerald-700">
                         {cat.name}
+                      </a>
+                      {cat.children?.length > 0 && (
+                        <ul className="mt-1 ml-3 space-y-1 border-l border-slate-200 pl-3">
+                          {cat.children.map((child) => (
+                            <li key={child.id}>
+                              <a href={`/categories/${child.slug}`} className="text-slate-500 hover:text-emerald-700">
+                                {child.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {mode === 'category' && activeCategory?.children?.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 border-b border-slate-200 pb-2 text-xs font-bold tracking-wide text-slate-500">SUBCATEGORIES</p>
+                <ul className="space-y-1 text-sm">
+                  {activeCategory.children.map((child) => (
+                    <li key={child.id}>
+                      <a href={`/categories/${child.slug}`} className="text-slate-600 hover:text-emerald-700">
+                        {child.name}
                       </a>
                     </li>
                   ))}
@@ -114,7 +140,7 @@ export default function ProductListing({ mode = 'shop' }) {
             )}
 
             <div className="mb-4">
-              <p className="mb-2 text-xs font-semibold text-slate-500">PRICE RANGE (PKR)</p>
+              <p className="mb-2 border-b border-slate-200 pb-2 text-xs font-bold tracking-wide text-slate-500">PRICE RANGE (PKR)</p>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -134,7 +160,7 @@ export default function ProductListing({ mode = 'shop' }) {
             </div>
 
             <div className="mb-4">
-              <p className="mb-2 text-xs font-semibold text-slate-500">MINIMUM RATING</p>
+              <p className="mb-2 border-b border-slate-200 pb-2 text-xs font-bold tracking-wide text-slate-500">MINIMUM RATING</p>
               <select
                 value={filters.min_rating}
                 onChange={(e) => setFilters((f) => ({ ...f, min_rating: e.target.value }))}

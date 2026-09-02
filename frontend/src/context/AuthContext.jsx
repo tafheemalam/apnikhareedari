@@ -30,9 +30,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(async (payload) => {
-    const registeredUser = await authService.register(payload);
-    setUser(registeredUser);
-    return registeredUser;
+    // Does not log the customer in — registration now requires email
+    // verification before the account can be used.
+    return authService.register(payload);
   }, []);
 
   const logout = useCallback(async () => {

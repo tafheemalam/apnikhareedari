@@ -6,6 +6,7 @@ use App\Models\Coupon;
 use App\Models\Inventory;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Models\User;
 use App\Services\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -26,15 +27,27 @@ class CheckoutTest extends TestCase
         ], $overrides);
     }
 
-    public function test_guest_can_place_a_cod_order_and_stock_is_deducted(): void
+    public function test_guest_checkout_is_rejected(): void
+    {
+        $product = $this->createProductWithStock(10);
+        $headers = ['X-Cart-Token' => 'guest-checkout-token'];
+
+        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload());
+
+        $response->assertStatus(401);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_a_logged_in_customer_can_place_a_cod_order_and_stock_is_deducted(): void
     {
         Notification::fake();
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(10);
-        $headers = ['X-Cart-Token' => 'checkout-token-1'];
 
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 3]);
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 3]);
 
-        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload());
+        $response = $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload());
 
         $response->assertCreated()
             ->assertJsonPath('success', true)
@@ -44,26 +57,27 @@ class CheckoutTest extends TestCase
 
         $orderNumber = $response->json('data.order_number');
         $this->assertMatchesRegularExpression('/^ORD-\d{8}-\d{6}$/', $orderNumber);
+        $this->assertEquals($customer->id, Order::where('order_number', $orderNumber)->value('user_id'));
 
         $inventory = Inventory::where('product_id', $product->id)->first();
         $this->assertEquals(7, $inventory->quantity);
 
         // Cart is emptied after a successful order.
-        $cart = $this->withHeaders($headers)->getJson('/api/cart')->json('data');
+        $cart = $this->actingAs($customer)->getJson('/api/cart')->json('data');
         $this->assertCount(0, $cart['items']);
     }
 
     public function test_checkout_fails_when_stock_is_insufficient_at_checkout_time(): void
     {
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(1);
-        $headers = ['X-Cart-Token' => 'checkout-token-2'];
 
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
 
         // Simulate another customer buying the last unit between add-to-cart and checkout.
         app(InventoryService::class)->decrease($product, null, 1, 'sale');
 
-        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload());
+        $response = $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload());
 
         $response->assertStatus(422)->assertJsonPath('success', false);
         $this->assertDatabaseCount('orders', 0);
@@ -74,11 +88,11 @@ class CheckoutTest extends TestCase
         Notification::fake();
         Setting::set('payment.online_enabled', '1', 'payment');
 
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(10);
-        $headers = ['X-Cart-Token' => 'checkout-token-3'];
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
 
-        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload(['payment_method' => 'online']));
+        $response = $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload(['payment_method' => 'online']));
 
         $response->assertCreated()
             ->assertJsonPath('data.payment_status', 'paid')
@@ -90,11 +104,11 @@ class CheckoutTest extends TestCase
     {
         Setting::set('payment.online_enabled', '0', 'payment');
 
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(10);
-        $headers = ['X-Cart-Token' => 'checkout-token-4'];
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
 
-        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload(['payment_method' => 'online']));
+        $response = $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload(['payment_method' => 'online']));
 
         $response->assertStatus(422)->assertJsonPath('success', false);
     }
@@ -102,16 +116,16 @@ class CheckoutTest extends TestCase
     public function test_a_valid_coupon_discounts_the_order_total(): void
     {
         Notification::fake();
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(10, ['price' => 4000, 'sale_price' => null]);
         Coupon::create([
             'code' => 'SAVE10', 'type' => 'percentage', 'value' => 10,
             'minimum_order_amount' => 1000, 'status' => true, 'used_count' => 0,
         ]);
 
-        $headers = ['X-Cart-Token' => 'checkout-token-5'];
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
 
-        $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload(['coupon_code' => 'save10']));
+        $response = $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload(['coupon_code' => 'save10']));
 
         $response->assertCreated()->assertJsonPath('data.discount_amount', '400.00');
         $this->assertEquals(1, Coupon::where('code', 'SAVE10')->value('used_count'));
@@ -120,10 +134,10 @@ class CheckoutTest extends TestCase
     public function test_product_price_is_snapshotted_on_the_order_item(): void
     {
         Notification::fake();
+        $customer = User::factory()->create();
         $product = $this->createProductWithStock(10, ['price' => 1000, 'sale_price' => null]);
-        $headers = ['X-Cart-Token' => 'checkout-token-6'];
-        $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
-        $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload());
+        $this->actingAs($customer)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload());
 
         // Price changes after the order should not affect the historical order item.
         $product->update(['price' => 5000]);

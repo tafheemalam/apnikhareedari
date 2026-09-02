@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import * as addressService from '../../services/addressService';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage } from '../../utils/format';
+import { isValidPhone, sanitizePhoneDigits, formatPhoneDisplay } from '../../utils/validators';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -12,13 +14,25 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 const EMPTY = { label: '', full_name: '', phone: '', address_line: '', city: '', area: '', postal_code: '', is_default: false };
 
 export default function Addresses() {
+  const { user } = useAuth();
   const toast = useToast();
   const [addresses, setAddresses] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  function validate() {
+    const next = {};
+    if (!form.full_name.trim()) next.full_name = 'Full name is required.';
+    if (!isValidPhone(form.phone, { required: true })) next.phone = 'Enter a valid Pakistani mobile number, e.g. 0300 1234567.';
+    if (!form.city.trim()) next.city = 'City is required.';
+    if (!form.address_line.trim()) next.address_line = 'Address is required.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   function load() {
     addressService.getAddresses().then(setAddresses);
@@ -28,18 +42,22 @@ export default function Addresses() {
 
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY);
+    setForm({ ...EMPTY, full_name: user.name || '', phone: sanitizePhoneDigits(user.phone || '') });
+    setErrors({});
     setModalOpen(true);
   }
 
   function openEdit(address) {
     setEditing(address);
-    setForm({ ...address });
+    setForm({ ...address, phone: sanitizePhoneDigits(address.phone || '') });
+    setErrors({});
     setModalOpen(true);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!validate()) return;
+
     setSaving(true);
     try {
       if (editing) {
@@ -110,12 +128,39 @@ export default function Addresses() {
       )}
 
       <Modal open={modalOpen} title={editing ? 'Edit Address' : 'Add Address'} onClose={() => setModalOpen(false)}>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input label="Label (e.g. Home)" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} />
-          <Input label="Full Name" required value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} />
-          <Input label="Phone" required value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
-          <Input label="City" required value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
-          <Input label="Address" required className="sm:col-span-2" value={form.address_line} onChange={(e) => setForm((f) => ({ ...f, address_line: e.target.value }))} />
+          <Input
+            label="Full Name"
+            required
+            error={errors.full_name}
+            value={form.full_name}
+            onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+          />
+          <Input
+            label="Phone"
+            type="tel"
+            required
+            placeholder="0300 1234567"
+            error={errors.phone}
+            value={formatPhoneDisplay(form.phone)}
+            onChange={(e) => setForm((f) => ({ ...f, phone: sanitizePhoneDigits(e.target.value) }))}
+          />
+          <Input
+            label="City"
+            required
+            error={errors.city}
+            value={form.city}
+            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+          />
+          <Input
+            label="Address"
+            required
+            className="sm:col-span-2"
+            error={errors.address_line}
+            value={form.address_line}
+            onChange={(e) => setForm((f) => ({ ...f, address_line: e.target.value }))}
+          />
           <Input label="Area" value={form.area} onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))} />
           <Input label="Postal Code" value={form.postal_code} onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))} />
           <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2">

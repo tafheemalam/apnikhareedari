@@ -43,7 +43,7 @@ class SettingController extends Controller
 
     public function uploadLogo(Request $request): JsonResponse
     {
-        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:1024']]);
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024']]);
 
         $path = $this->imageUploadService->store($request->file('image'), 'store');
         Setting::set('store.logo', $path, 'store');
@@ -53,7 +53,7 @@ class SettingController extends Controller
 
     public function uploadFavicon(Request $request): JsonResponse
     {
-        $request->validate(['image' => ['required', 'image', 'mimes:ico,png,svg', 'max:256']]);
+        $request->validate(['image' => ['required', 'image', 'mimes:ico,png', 'max:256']]);
 
         $path = $this->imageUploadService->store($request->file('image'), 'store');
         Setting::set('store.favicon', $path, 'store');

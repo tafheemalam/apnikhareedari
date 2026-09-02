@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminUserController;
+use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\Admin\DashboardController;
@@ -8,18 +9,21 @@ use App\Http\Controllers\Api\Admin\InventoryController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariationController;
+use App\Http\Controllers\Api\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Api\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Api\Admin\ShippingZoneController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\ProfileController;
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShippingController;
@@ -32,18 +36,27 @@ Route::prefix('auth')->group(function () {
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
     Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
+    Route::get('verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/resend-guest', [AuthController::class, 'resendVerificationEmailForGuest'])->middleware('throttle:5,1');
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::post('email/resend', [AuthController::class, 'resendVerificationEmail'])->middleware('throttle:5,1');
     });
 });
 
 // Public storefront catalog & content
+Route::get('banners', [BannerController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::get('categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{product:slug}', [ProductController::class, 'show']);
 Route::get('products/{product}/reviews', [ReviewController::class, 'index']);
+Route::get('products/{product}/questions', [QuestionController::class, 'index']);
 Route::get('settings/public', [SettingController::class, 'index']);
 Route::get('shipping/zones', [ShippingController::class, 'zones']);
 Route::post('shipping/estimate', [ShippingController::class, 'estimate']);
@@ -58,10 +71,10 @@ Route::prefix('cart')->group(function () {
     Route::delete('/', [CartController::class, 'clear']);
 });
 
-Route::post('checkout', [CheckoutController::class, 'store'])->middleware('throttle:20,1');
-
 // Authenticated customer routes
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('checkout', [CheckoutController::class, 'store'])->middleware(['throttle:20,1', 'verified']);
+
     Route::put('profile', [ProfileController::class, 'update']);
     Route::put('profile/password', [ProfileController::class, 'changePassword']);
 
@@ -80,6 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('products/{product}/reviews', [ReviewController::class, 'store']);
     Route::put('reviews/{review}', [ReviewController::class, 'update']);
+
+    Route::post('products/{product}/questions', [QuestionController::class, 'store']);
+    Route::post('questions/{question}/answers', [QuestionController::class, 'storeAnswer']);
 });
 
 // Admin-only routes
@@ -134,6 +150,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
         Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy']);
     });
 
+    Route::middleware('permission:manage-questions')->group(function () {
+        Route::get('questions', [AdminQuestionController::class, 'index']);
+        Route::patch('questions/{question}/reject', [AdminQuestionController::class, 'reject']);
+        Route::delete('questions/{question}', [AdminQuestionController::class, 'destroy']);
+        Route::delete('questions/{question}/answers/{answer}', [AdminQuestionController::class, 'destroyAnswer']);
+    });
+
     Route::middleware('permission:manage-settings')->group(function () {
         Route::get('settings', [AdminSettingController::class, 'index']);
         Route::put('settings', [AdminSettingController::class, 'update']);
@@ -142,6 +165,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
 
         Route::apiResource('shipping-zones', ShippingZoneController::class, ['parameters' => ['shipping-zones' => 'zone']])
             ->except(['show']);
+
+        Route::apiResource('banners', AdminBannerController::class)->except(['show']);
+        Route::patch('banners/{banner}/toggle-status', [AdminBannerController::class, 'toggleStatus']);
     });
 
     Route::middleware('permission:manage-admins')->group(function () {

@@ -23,8 +23,30 @@ export default function AdminCategories() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
+  const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // The table view is paginated (15/page), but the "Parent Category" dropdown
+  // needs every category regardless of which page is currently showing —
+  // otherwise a category on another page silently can't be picked as a parent.
+  const [parentOptions, setParentOptions] = useState([]);
+
+  function loadParentOptions() {
+    categoryService.getCategories({ per_page: 200 }).then((data) => setParentOptions(data.data));
+  }
+
+  useEffect(loadParentOptions, []);
+
+  useEffect(() => {
+    if (!form.image) {
+      setImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(form.image);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [form.image]);
 
   function load() {
     setLoading(true);
@@ -68,6 +90,7 @@ export default function AdminCategories() {
       }
       setModalOpen(false);
       load();
+      loadParentOptions();
     } catch (err) {
       toast.error(extractErrorMessage(err));
     } finally {
@@ -78,6 +101,7 @@ export default function AdminCategories() {
   async function handleDelete() {
     try {
       await categoryService.deleteCategory(deleteTarget.id);
+      loadParentOptions();
       toast.success('Category deleted successfully');
       setDeleteTarget(null);
       load();
@@ -91,7 +115,7 @@ export default function AdminCategories() {
     load();
   }
 
-  const allCategories = result?.data ?? [];
+  const categoriesOnPage = result?.data ?? [];
 
   return (
     <div>
@@ -112,7 +136,7 @@ export default function AdminCategories() {
 
       {loading ? (
         <LoadingSpinner />
-      ) : allCategories.length === 0 ? (
+      ) : categoriesOnPage.length === 0 ? (
         <EmptyState title="No categories yet" />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -127,7 +151,7 @@ export default function AdminCategories() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {allCategories.map((cat) => (
+              {categoriesOnPage.map((cat) => (
                 <tr key={cat.id}>
                   <td className="px-4 py-3 font-medium text-slate-800">{cat.name}</td>
                   <td className="px-4 py-3 text-slate-500">{cat.parent?.name || '—'}</td>
@@ -156,7 +180,7 @@ export default function AdminCategories() {
           <Input label="Name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           <Select label="Parent Category" value={form.parent_id} onChange={(e) => setForm((f) => ({ ...f, parent_id: e.target.value }))}>
             <option value="">None (top-level category)</option>
-            {allCategories.filter((c) => c.id !== editing?.id).map((c) => (
+            {parentOptions.filter((c) => c.id !== editing?.id).map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </Select>
@@ -164,6 +188,9 @@ export default function AdminCategories() {
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Image</label>
             <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, image: e.target.files[0] }))} className="text-sm" />
+            {(imagePreview || editing?.image_url) && (
+              <img src={imagePreview || editing.image_url} alt="" className="mt-2 h-20 w-20 rounded-md object-cover" />
+            )}
           </div>
           <Input label="Sort Order" type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))} />
           <Checkbox label="Active" checked={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))} />
