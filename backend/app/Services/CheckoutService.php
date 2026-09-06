@@ -34,7 +34,9 @@ class CheckoutService
     {
         $cart->loadMissing('items.product', 'items.variation', 'basketInstances.items.product', 'basketInstances.items.variation');
 
-        if ($cart->items->isEmpty() && $cart->basketInstances->isEmpty()) {
+        $filledBaskets = $cart->basketInstances->filter(fn ($cb) => $cb->items->isNotEmpty());
+
+        if ($cart->items->isEmpty() && $filledBaskets->isEmpty()) {
             throw new RuntimeException('Your cart is empty.');
         }
 
@@ -53,14 +55,14 @@ class CheckoutService
             }
         }
 
-        foreach ($cart->basketInstances as $cartBasket) {
+        foreach ($filledBaskets as $cartBasket) {
             $this->basketService->assertFillIsValid($cartBasket);
         }
 
         $shippingFields = $this->resolveShippingFields($data, $user);
         $subtotal = round(
             (float) $cart->items->sum(fn ($item) => $item->quantity * (float) $item->unit_price)
-                + (float) $cart->basketInstances->sum(fn ($cartBasket) => (float) $cartBasket->amount),
+                + (float) $filledBaskets->sum(fn ($cartBasket) => (float) $cartBasket->amount),
             2
         );
 
@@ -84,7 +86,7 @@ class CheckoutService
 
         $total = round($subtotal - $discount + $shipping['amount'] + $tax, 2);
 
-        return DB::transaction(function () use ($cart, $data, $user, $shippingFields, $subtotal, $discount, $coupon, $shipping, $tax, $total) {
+        return DB::transaction(function () use ($cart, $data, $user, $shippingFields, $subtotal, $discount, $coupon, $shipping, $tax, $total, $filledBaskets) {
             $order = Order::create(array_merge($shippingFields, [
                 'order_number' => $this->generateOrderNumber(),
                 'user_id' => $user->id,
@@ -124,7 +126,7 @@ class CheckoutService
                 );
             }
 
-            foreach ($cart->basketInstances as $cartBasket) {
+            foreach ($filledBaskets as $cartBasket) {
                 $orderItem = $order->items()->create([
                     'product_id' => null,
                     'product_variation_id' => null,

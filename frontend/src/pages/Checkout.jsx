@@ -126,7 +126,7 @@ export default function Checkout() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!items.length && !basketInstances.length) {
+    if (!items.length && !basketInstances.filter((cb) => cb.items?.length > 0).length) {
       toast.error('Your cart is empty');
       return;
     }
@@ -204,7 +204,9 @@ export default function Checkout() {
 
   if (!cart) return <LoadingSpinner className="min-h-[50vh]" />;
 
-  if (!items.length && !basketInstances.length) {
+  const filledBaskets = basketInstances.filter((cb) => cb.items?.length > 0);
+
+  if (!items.length && !filledBaskets.length) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-slate-600">Your cart is empty.</p>
@@ -409,7 +411,7 @@ export default function Checkout() {
                 <span>{formatCurrency(item.line_total)}</span>
               </div>
             ))}
-            {basketInstances.map((cb) => (
+            {filledBaskets.map((cb) => (
               <div key={`basket-${cb.id}`} className="flex justify-between text-slate-600">
                 <span className="line-clamp-1">🧺 {cb.name}</span>
                 <span>{formatCurrency(cb.amount)}</span>

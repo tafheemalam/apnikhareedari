@@ -31,7 +31,9 @@ class Cart extends Model
     public function getSubtotalAttribute(): float
     {
         $itemsTotal = (float) $this->items->sum(fn (CartItem $item) => $item->quantity * (float) $item->unit_price);
-        $basketsTotal = (float) $this->basketInstances->sum(fn (CartBasket $cartBasket) => (float) $cartBasket->amount);
+        $basketsTotal = (float) $this->basketInstances
+            ->filter(fn (CartBasket $cb) => $cb->items->isNotEmpty())
+            ->sum(fn (CartBasket $cartBasket) => (float) $cartBasket->amount);
 
         return $itemsTotal + $basketsTotal;
     }
