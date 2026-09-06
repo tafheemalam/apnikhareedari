@@ -10,7 +10,10 @@ export default function SearchBar({ className = '' }) {
     e.preventDefault();
     if (term.trim()) {
       navigate(`/search?search=${encodeURIComponent(term.trim())}`);
+    } else {
+      navigate('/shop');
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return (

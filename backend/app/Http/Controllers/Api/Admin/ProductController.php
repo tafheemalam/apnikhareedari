@@ -150,7 +150,7 @@ class ProductController extends Controller
     {
         $flags = [];
 
-        foreach (['has_variations', 'status', 'featured', 'new_arrival', 'best_seller'] as $flag) {
+        foreach (['has_variations', 'status', 'featured', 'new_arrival', 'best_seller', 'show_in_basket'] as $flag) {
             if ($request->has($flag)) {
                 $flags[$flag] = $request->boolean($flag);
             }

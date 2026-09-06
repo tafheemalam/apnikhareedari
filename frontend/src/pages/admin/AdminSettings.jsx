@@ -23,6 +23,11 @@ const FIELD_LABELS = {
   'payment.cod_enabled': 'Enable Cash on Delivery',
   'payment.online_enabled': 'Enable Online Payment',
   'payment.active_gateway': 'Active Online Gateway',
+  'payment.jazzcash_enabled': 'Enable JazzCash',
+  'payment.easypaisa_enabled': 'Enable EasyPaisa',
+  'payment.mobile_payment_number': 'JazzCash / EasyPaisa Number',
+  'payment.account_title': 'Account Title',
+  'payment.whatsapp_number': 'WhatsApp Number (for payment screenshots)',
   'shipping.default_rate': 'Default Shipping Rate (PKR)',
   'shipping.free_shipping_threshold': 'Free Shipping Threshold (PKR)',
   'tax.enabled': 'Enable Tax',
@@ -35,7 +40,7 @@ const FIELD_LABELS = {
   'social.youtube': 'YouTube URL',
 };
 
-const BOOLEAN_FIELDS = ['payment.cod_enabled', 'payment.online_enabled', 'tax.enabled'];
+const BOOLEAN_FIELDS = ['payment.cod_enabled', 'payment.online_enabled', 'payment.jazzcash_enabled', 'payment.easypaisa_enabled', 'tax.enabled'];
 const BACKEND_ORIGIN = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
 
 export default function AdminSettings() {

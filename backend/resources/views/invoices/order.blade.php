@@ -49,7 +49,17 @@
         <tbody>
             @foreach ($order->items as $item)
                 <tr>
-                    <td>{{ $item->product_name }}{{ $item->variation_label ? ' ('.$item->variation_label.')' : '' }}</td>
+                    <td>
+                        {{ $item->product_name }}{{ $item->variation_label ? ' ('.$item->variation_label.')' : '' }}
+                        @if ($item->basket_id)
+                            <div class="muted" style="margin-top: 4px;">
+                                Contents:
+                                @foreach ($item->basketItems as $basketItem)
+                                    {{ $basketItem->product_name }}{{ $basketItem->variation_label ? ' ('.$basketItem->variation_label.')' : '' }} &times; {{ $basketItem->quantity }}{{ !$loop->last ? ', ' : '' }}
+                                @endforeach
+                            </div>
+                        @endif
+                    </td>
                     <td>{{ $item->sku }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td>PKR {{ number_format($item->price, 2) }}</td>

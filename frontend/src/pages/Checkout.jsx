@@ -34,7 +34,7 @@ const EMPTY_ALT_SHIPPING = {
 };
 
 export default function Checkout() {
-  const { cart, items, subtotal, refresh: refreshCart } = useCart();
+  const { cart, items, basketInstances, subtotal, refresh: refreshCart } = useCart();
   const { isAuthenticated, user } = useAuth();
   const { settings } = useSite();
   const toast = useToast();
@@ -126,7 +126,7 @@ export default function Checkout() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!items.length) {
+    if (!items.length && !basketInstances.length) {
       toast.error('Your cart is empty');
       return;
     }
@@ -190,7 +190,11 @@ export default function Checkout() {
       }
 
       toast.success('Order placed successfully!');
-      navigate(`/order-confirmation/${order.order_number}`, { state: { order } });
+      if (paymentMethod === 'jazzcash' || paymentMethod === 'easypaisa') {
+        navigate(`/payment-instructions/${order.order_number}`, { state: { order } });
+      } else {
+        navigate(`/order-confirmation/${order.order_number}`, { state: { order } });
+      }
     } catch (err) {
       toast.error(extractErrorMessage(err, 'Checkout failed'));
     } finally {
@@ -200,7 +204,7 @@ export default function Checkout() {
 
   if (!cart) return <LoadingSpinner className="min-h-[50vh]" />;
 
-  if (!items.length) {
+  if (!items.length && !basketInstances.length) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-slate-600">Your cart is empty.</p>
@@ -211,6 +215,8 @@ export default function Checkout() {
 
   const codEnabled = settings['payment.cod_enabled'] === '1';
   const onlineEnabled = settings['payment.online_enabled'] === '1';
+  const jazzcashEnabled = settings['payment.jazzcash_enabled'] === '1';
+  const easypaisaEnabled = settings['payment.easypaisa_enabled'] === '1';
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -370,6 +376,26 @@ export default function Checkout() {
                   Online Payment
                 </label>
               )}
+              {jazzcashEnabled && (
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="payment" checked={paymentMethod === 'jazzcash'} onChange={() => setPaymentMethod('jazzcash')} />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#CF0A2C] text-[10px] font-bold text-[#FFD700]">JC</span>
+                  <span>
+                    <span className="font-semibold text-slate-800">JazzCash</span>
+                    <span className="ml-1 text-slate-500">— Pay via mobile wallet</span>
+                  </span>
+                </label>
+              )}
+              {easypaisaEnabled && (
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="payment" checked={paymentMethod === 'easypaisa'} onChange={() => setPaymentMethod('easypaisa')} />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1B5E20] text-[10px] font-bold text-white">EP</span>
+                  <span>
+                    <span className="font-semibold text-slate-800">EasyPaisa</span>
+                    <span className="ml-1 text-slate-500">— Pay via mobile wallet</span>
+                  </span>
+                </label>
+              )}
             </div>
           </div>
         </div>
@@ -381,6 +407,12 @@ export default function Checkout() {
               <div key={item.id} className="flex justify-between text-slate-600">
                 <span className="line-clamp-1">{item.product.name} × {item.quantity}</span>
                 <span>{formatCurrency(item.line_total)}</span>
+              </div>
+            ))}
+            {basketInstances.map((cb) => (
+              <div key={`basket-${cb.id}`} className="flex justify-between text-slate-600">
+                <span className="line-clamp-1">🧺 {cb.name}</span>
+                <span>{formatCurrency(cb.amount)}</span>
               </div>
             ))}
           </div>

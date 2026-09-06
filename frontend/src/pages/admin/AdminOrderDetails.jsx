@@ -99,13 +99,24 @@ export default function AdminOrderDetails() {
             <h2 className="mb-3 text-sm font-bold text-slate-900">Items</h2>
             <div className="divide-y divide-slate-100">
               {order.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2 text-sm">
-                  <div>
-                    <p className="font-medium text-slate-700">{item.product_name}</p>
-                    {item.variation_label && <p className="text-xs text-slate-500">{item.variation_label}</p>}
-                    <p className="text-xs text-slate-400">SKU: {item.sku} · Qty: {item.quantity} × {formatCurrency(item.price)}</p>
+                <div key={item.id} className="py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-slate-700">{item.basket_id ? `🧺 ${item.product_name}` : item.product_name}</p>
+                      {item.variation_label && <p className="text-xs text-slate-500">{item.variation_label}</p>}
+                      <p className="text-xs text-slate-400">SKU: {item.sku} · Qty: {item.quantity} × {formatCurrency(item.price)}</p>
+                    </div>
+                    <span className="font-semibold text-slate-900">{formatCurrency(item.line_total)}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{formatCurrency(item.line_total)}</span>
+                  {item.basket_id && item.basket_items?.length > 0 && (
+                    <ul className="mt-2 ml-4 space-y-1 border-l-2 border-emerald-100 pl-3 text-xs text-slate-500">
+                      {item.basket_items.map((bi) => (
+                        <li key={bi.id}>
+                          {bi.product_name}{bi.variation_label ? ` (${bi.variation_label})` : ''} × {bi.quantity} — SKU: {bi.sku}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               ))}
             </div>

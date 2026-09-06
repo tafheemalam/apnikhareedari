@@ -7,9 +7,18 @@ import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function Cart() {
-  const { cart, items, subtotal, loading, updateItem, removeItem } = useCart();
+  const { cart, items, basketInstances, subtotal, loading, updateItem, removeItem, removeBasketInstance } = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+
+  async function handleRemoveBasket(cartBasketId) {
+    try {
+      await removeBasketInstance(cartBasketId);
+      toast.info('Basket removed from cart');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  }
 
   async function handleQuantityChange(itemId, quantity) {
     if (quantity < 1) return;
@@ -31,7 +40,7 @@ export default function Cart() {
 
   if (loading && !cart) return <LoadingSpinner className="min-h-[50vh]" />;
 
-  if (!items.length) {
+  if (!items.length && !basketInstances.length) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16">
         <EmptyState
@@ -89,6 +98,30 @@ export default function Cart() {
                     </button>
                   </div>
                   <span className="text-sm font-bold text-slate-900">{formatCurrency(item.line_total)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {basketInstances.map((cb) => (
+            <div key={`basket-${cb.id}`} className="p-4">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">🧺 {cb.name}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {cb.items.map((item) => `${item.product.name} × ${item.quantity}`).join(', ') || 'No items yet'}
+                    </p>
+                  </div>
+                  <button onClick={() => handleRemoveBasket(cb.id)} className="text-xs font-medium text-red-500 hover:text-red-700">
+                    Remove
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <Link to={`/baskets/${cb.id}/fill`} className="text-xs font-semibold text-emerald-700 hover:underline">
+                    Edit contents
+                  </Link>
+                  <span className="text-sm font-bold text-slate-900">{formatCurrency(cb.amount)}</span>
                 </div>
               </div>
             </div>

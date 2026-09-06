@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Http\Requests\Cart;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreCartBasketRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'basket_id' => ['required', 'integer', 'exists:baskets,id'],
+        ];
+    }
+}

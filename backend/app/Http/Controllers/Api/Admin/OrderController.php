@@ -49,7 +49,7 @@ class OrderController extends Controller
 
     public function show(Order $order): JsonResponse
     {
-        $order->load('user:id,name,email', 'items.product', 'payments');
+        $order->load('user:id,name,email', 'items.product', 'items.basketItems.product', 'payments');
 
         return $this->success(new OrderResource($order));
     }
@@ -65,8 +65,20 @@ class OrderController extends Controller
             $order->update(['status' => $newStatus]);
 
             if ($newStatus === 'returned' && ! in_array($previousStatus, ['cancelled', 'returned'], true)) {
-                $order->loadMissing('items.product', 'items.variation');
+                $order->loadMissing('items.product', 'items.variation', 'items.basketItems.product', 'items.basketItems.variation');
                 foreach ($order->items as $item) {
+                    if ($item->basket_id) {
+                        foreach ($item->basketItems as $basketItem) {
+                            if ($basketItem->product) {
+                                $this->inventoryService->increase(
+                                    $basketItem->product, $basketItem->variation, $basketItem->quantity, 'return',
+                                    referenceType: 'order', referenceId: $order->id, actor: $request->user(),
+                                );
+                            }
+                        }
+                        continue;
+                    }
+
                     if ($item->product) {
                         $this->inventoryService->increase(
                             $item->product, $item->variation, $item->quantity, 'return',
@@ -79,7 +91,7 @@ class OrderController extends Controller
             $this->notifyStatusChange($order);
         }
 
-        return $this->success(new OrderResource($order->load('items.product', 'payments')), 'Order status updated');
+        return $this->success(new OrderResource($order->load('items.product', 'items.basketItems.product', 'payments')), 'Order status updated');
     }
 
     public function updatePaymentStatus(UpdatePaymentStatusRequest $request, Order $order): JsonResponse
@@ -104,12 +116,12 @@ class OrderController extends Controller
 
         $order = $this->cancellationService->cancel($order, $request->user(), $request->input('reason'));
 
-        return $this->success(new OrderResource($order->load('items.product', 'payments')), 'Order cancelled successfully');
+        return $this->success(new OrderResource($order->load('items.product', 'items.basketItems.product', 'payments')), 'Order cancelled successfully');
     }
 
     public function invoice(Order $order): Response
     {
-        $order->load('items');
+        $order->load('items.basketItems');
         $pdf = Pdf::loadView('invoices.order', ['order' => $order]);
 
         return $pdf->download("invoice-{$order->order_number}.pdf");

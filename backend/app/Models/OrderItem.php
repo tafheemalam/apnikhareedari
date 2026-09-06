@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -11,6 +12,7 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'product_variation_id',
+        'basket_id',
         'product_name',
         'variation_label',
         'sku',
@@ -40,5 +42,15 @@ class OrderItem extends Model
     public function variation(): BelongsTo
     {
         return $this->belongsTo(ProductVariation::class, 'product_variation_id');
+    }
+
+    public function basket(): BelongsTo
+    {
+        return $this->belongsTo(Basket::class);
+    }
+
+    public function basketItems(): HasMany
+    {
+        return $this->hasMany(OrderBasketItem::class);
     }
 }

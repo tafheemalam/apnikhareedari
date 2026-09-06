@@ -31,7 +31,7 @@ class OrderController extends Controller
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $this->authorize('view', $order);
 
-        $order->load('items.product', 'payments');
+        $order->load('items.product', 'items.basketItems.product', 'payments');
 
         return $this->success(new OrderResource($order));
     }
@@ -43,7 +43,7 @@ class OrderController extends Controller
 
         $order = $this->cancellationService->cancel($order, $request->user(), $request->input('reason'));
 
-        return $this->success(new OrderResource($order->load('items.product', 'payments')), 'Order cancelled successfully');
+        return $this->success(new OrderResource($order->load('items.product', 'items.basketItems.product', 'payments')), 'Order cancelled successfully');
     }
 
     public function invoice(Request $request, string $orderNumber): Response
@@ -51,7 +51,7 @@ class OrderController extends Controller
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $this->authorize('view', $order);
 
-        $order->load('items');
+        $order->load('items.basketItems');
         $pdf = Pdf::loadView('invoices.order', ['order' => $order]);
 
         return $pdf->download("invoice-{$order->order_number}.pdf");

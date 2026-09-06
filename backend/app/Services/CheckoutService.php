@@ -24,6 +24,7 @@ class CheckoutService
         protected InventoryService $inventoryService,
         protected ShippingService $shippingService,
         protected PaymentGatewayManager $gateways,
+        protected BasketService $basketService,
     ) {}
 
     /**
@@ -31,9 +32,9 @@ class CheckoutService
      */
     public function process(Cart $cart, array $data, User $user): Order
     {
-        $cart->loadMissing('items.product', 'items.variation');
+        $cart->loadMissing('items.product', 'items.variation', 'basketInstances.items.product', 'basketInstances.items.variation');
 
-        if ($cart->items->isEmpty()) {
+        if ($cart->items->isEmpty() && $cart->basketInstances->isEmpty()) {
             throw new RuntimeException('Your cart is empty.');
         }
 
@@ -52,8 +53,16 @@ class CheckoutService
             }
         }
 
+        foreach ($cart->basketInstances as $cartBasket) {
+            $this->basketService->assertFillIsValid($cartBasket);
+        }
+
         $shippingFields = $this->resolveShippingFields($data, $user);
-        $subtotal = round((float) $cart->items->sum(fn ($item) => $item->quantity * (float) $item->unit_price), 2);
+        $subtotal = round(
+            (float) $cart->items->sum(fn ($item) => $item->quantity * (float) $item->unit_price)
+                + (float) $cart->basketInstances->sum(fn ($cartBasket) => (float) $cartBasket->amount),
+            2
+        );
 
         $coupon = null;
         $discount = 0.0;
@@ -115,6 +124,42 @@ class CheckoutService
                 );
             }
 
+            foreach ($cart->basketInstances as $cartBasket) {
+                $orderItem = $order->items()->create([
+                    'product_id' => null,
+                    'product_variation_id' => null,
+                    'basket_id' => $cartBasket->basket_id,
+                    'product_name' => $cartBasket->basket_name,
+                    'variation_label' => null,
+                    'sku' => 'BASKET-'.$cartBasket->id,
+                    'price' => $cartBasket->amount,
+                    'quantity' => 1,
+                    'line_total' => $cartBasket->amount,
+                ]);
+
+                foreach ($cartBasket->items as $basketItem) {
+                    $orderItem->basketItems()->create([
+                        'product_id' => $basketItem->product_id,
+                        'product_variation_id' => $basketItem->product_variation_id,
+                        'product_name' => $basketItem->product->name,
+                        'variation_label' => $basketItem->variation?->label,
+                        'sku' => $basketItem->variation?->sku ?? $basketItem->product->sku,
+                        'quantity' => $basketItem->quantity,
+                        'unit_price' => $basketItem->unit_price,
+                    ]);
+
+                    $this->inventoryService->decrease(
+                        $basketItem->product,
+                        $basketItem->variation,
+                        $basketItem->quantity,
+                        'sale',
+                        referenceType: 'order',
+                        referenceId: $order->id,
+                        actor: $user,
+                    );
+                }
+            }
+
             if ($coupon) {
                 $coupon->increment('used_count');
                 CouponUsage::create([
@@ -128,8 +173,9 @@ class CheckoutService
             $this->capturePayment($order, $data['payment_method']);
 
             $cart->items()->delete();
+            $cart->basketInstances()->delete();
 
-            return $order->fresh(['items', 'payments']);
+            return $order->fresh(['items.basketItems', 'payments']);
         });
     }
 

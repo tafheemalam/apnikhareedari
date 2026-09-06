@@ -24,6 +24,7 @@ const EMPTY = {
   featured: false,
   new_arrival: false,
   best_seller: false,
+  show_in_basket: false,
   stock_quantity: '',
   low_stock_threshold: 5,
 };
@@ -78,6 +79,7 @@ export default function AdminProductForm() {
         featured: data.featured,
         new_arrival: data.new_arrival,
         best_seller: data.best_seller,
+        show_in_basket: data.show_in_basket,
         stock_quantity: data.stock_quantity,
         low_stock_threshold: 5,
       });
@@ -183,6 +185,7 @@ export default function AdminProductForm() {
             <Checkbox label="Featured" checked={form.featured} onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))} />
             <Checkbox label="New Arrival" checked={form.new_arrival} onChange={(e) => setForm((f) => ({ ...f, new_arrival: e.target.checked }))} />
             <Checkbox label="Best Seller" checked={form.best_seller} onChange={(e) => setForm((f) => ({ ...f, best_seller: e.target.checked }))} />
+            <Checkbox label="Show in Basket" checked={form.show_in_basket} onChange={(e) => setForm((f) => ({ ...f, show_in_basket: e.target.checked }))} />
             <Checkbox
               label="Has Variations (Size/Color etc.)"
               checked={form.has_variations}

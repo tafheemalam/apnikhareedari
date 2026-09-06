@@ -68,6 +68,10 @@ export default function ProductListing({ mode = 'shop' }) {
 
   useEffect(() => fetchProducts(), [fetchProducts]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [searchParams.toString()]);
+
   function updateParam(key, value) {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(key, value);

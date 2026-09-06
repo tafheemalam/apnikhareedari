@@ -35,7 +35,7 @@ class CheckoutRequest extends FormRequest
             'billing_area' => ['nullable', 'string', 'max:100'],
             'billing_postal_code' => ['nullable', 'string', 'max:20'],
 
-            'payment_method' => ['required', Rule::in(['cod', 'online'])],
+            'payment_method' => ['required', Rule::in(['cod', 'online', 'jazzcash', 'easypaisa'])],
             'coupon_code' => ['nullable', 'string', 'max:50'],
         ];
     }

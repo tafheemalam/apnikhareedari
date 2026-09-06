@@ -40,6 +40,7 @@ class ProductController extends Controller
             ->when($request->boolean('new_arrival'), fn ($q) => $q->newArrival())
             ->when($request->boolean('best_seller'), fn ($q) => $q->bestSeller())
             ->when($request->boolean('on_sale'), fn ($q) => $q->onSale())
+            ->when($request->boolean('show_in_basket'), fn ($q) => $q->where('show_in_basket', true))
             ->when($request->input('availability') === 'in_stock', function ($q) {
                 $q->where(function ($sub) {
                     $sub->whereHas('inventory', fn ($iq) => $iq->where('quantity', '>', 0))

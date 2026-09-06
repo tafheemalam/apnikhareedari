@@ -44,6 +44,7 @@ class ProductRequest extends FormRequest
             'featured' => ['boolean'],
             'new_arrival' => ['boolean'],
             'best_seller' => ['boolean'],
+            'show_in_basket' => ['boolean'],
             'stock_quantity' => [Rule::requiredIf($isCreate && ! $this->boolean('has_variations')), 'nullable', 'integer', 'min:0'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'images' => ['nullable', 'array'],

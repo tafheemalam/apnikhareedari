@@ -19,6 +19,8 @@ class OrderItemResource extends JsonResource
             'price' => $this->price,
             'quantity' => $this->quantity,
             'line_total' => $this->line_total,
+            'basket_id' => $this->basket_id,
+            'basket_items' => OrderBasketItemResource::collection($this->whenLoaded('basketItems')),
         ];
     }
 }

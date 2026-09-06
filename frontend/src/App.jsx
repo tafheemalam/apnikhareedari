@@ -13,9 +13,12 @@ import AdminLayout from './components/layout/AdminLayout';
 import Home from './pages/Home';
 import ProductListing from './pages/ProductListing';
 import ProductDetails from './pages/ProductDetails';
+import Baskets from './pages/Baskets';
+import BasketFill from './pages/BasketFill';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
+import PaymentInstructions from './pages/PaymentInstructions';
 import VerifyEmail from './pages/VerifyEmail';
 import ContactUs from './pages/ContactUs';
 import AboutUs from './pages/AboutUs';
@@ -43,6 +46,7 @@ import AdminInventory from './pages/admin/AdminInventory';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminOrderDetails from './pages/admin/AdminOrderDetails';
 import AdminCoupons from './pages/admin/AdminCoupons';
+import AdminBaskets from './pages/admin/AdminBaskets';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminQuestions from './pages/admin/AdminQuestions';
 import AdminShipping from './pages/admin/AdminShipping';
@@ -64,8 +68,11 @@ export default function App() {
                   <Route path="categories/:categorySlug" element={<ProductListing mode="category" />} />
                   <Route path="search" element={<ProductListing mode="search" />} />
                   <Route path="products/:slug" element={<ProductDetails />} />
+                  <Route path="baskets" element={<Baskets />} />
+                  <Route path="baskets/:cartBasketId/fill" element={<BasketFill />} />
                   <Route path="cart" element={<Cart />} />
                   <Route path="order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+                  <Route path="payment-instructions/:orderNumber" element={<PaymentInstructions />} />
                   <Route path="verify-email/:id/:hash" element={<VerifyEmail />} />
                   <Route path="contact" element={<ContactUs />} />
                   <Route path="about" element={<AboutUs />} />
@@ -106,6 +113,7 @@ export default function App() {
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="orders/:id" element={<AdminOrderDetails />} />
                     <Route path="coupons" element={<AdminCoupons />} />
+                    <Route path="baskets" element={<AdminBaskets />} />
                     <Route path="reviews" element={<AdminReviews />} />
                     <Route path="questions" element={<AdminQuestions />} />
                     <Route path="shipping" element={<AdminShipping />} />

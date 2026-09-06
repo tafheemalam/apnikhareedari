@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Api\Admin\BasketController as AdminBasketController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\Admin\DashboardController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\ProfileController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\BasketController;
+use App\Http\Controllers\Api\CartBasketController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
@@ -51,6 +54,7 @@ Route::prefix('auth')->group(function () {
 
 // Public storefront catalog & content
 Route::get('banners', [BannerController::class, 'index']);
+Route::get('baskets', [BasketController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::get('categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('products', [ProductController::class, 'index']);
@@ -69,6 +73,11 @@ Route::prefix('cart')->group(function () {
     Route::put('items/{item}', [CartController::class, 'updateItem']);
     Route::delete('items/{item}', [CartController::class, 'removeItem']);
     Route::delete('/', [CartController::class, 'clear']);
+
+    Route::post('baskets', [CartBasketController::class, 'store']);
+    Route::post('baskets/{cartBasket}/items', [CartBasketController::class, 'addItem']);
+    Route::delete('baskets/{cartBasket}/items/{cartBasketItem}', [CartBasketController::class, 'removeItem']);
+    Route::delete('baskets/{cartBasket}', [CartBasketController::class, 'destroy']);
 });
 
 // Authenticated customer routes
@@ -141,6 +150,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
     Route::middleware('permission:manage-coupons')->group(function () {
         Route::apiResource('coupons', AdminCouponController::class);
         Route::patch('coupons/{coupon}/toggle-status', [AdminCouponController::class, 'toggleStatus']);
+    });
+
+    Route::middleware('permission:manage-baskets')->group(function () {
+        Route::apiResource('baskets', AdminBasketController::class);
+        Route::patch('baskets/{basket}/toggle-status', [AdminBasketController::class, 'toggleStatus']);
     });
 
     Route::middleware('permission:manage-reviews')->group(function () {

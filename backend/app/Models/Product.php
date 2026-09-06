@@ -31,6 +31,7 @@ class Product extends Model
         'featured',
         'new_arrival',
         'best_seller',
+        'show_in_basket',
     ];
 
     protected function casts(): array
@@ -45,6 +46,7 @@ class Product extends Model
             'featured' => 'boolean',
             'new_arrival' => 'boolean',
             'best_seller' => 'boolean',
+            'show_in_basket' => 'boolean',
         ];
     }
 

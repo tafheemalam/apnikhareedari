@@ -20,7 +20,7 @@ class CheckoutController extends Controller
     public function store(CheckoutRequest $request): JsonResponse
     {
         $user = $request->user();
-        $cart = $this->cartService->resolveForUser($user)->load('items.product', 'items.variation');
+        $cart = $this->cartService->resolveForUser($user)->load('items.product', 'items.variation', 'basketInstances.items.product', 'basketInstances.items.variation');
 
         try {
             $order = $this->checkoutService->process($cart, $request->validated(), $user);

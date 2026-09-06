@@ -15,9 +15,30 @@ class OrderCancellationService
     public function cancel(Order $order, ?User $actor = null, ?string $reason = null): Order
     {
         DB::transaction(function () use ($order, $actor, $reason) {
-            $order->loadMissing('items.product', 'items.variation');
+            $order->loadMissing('items.product', 'items.variation', 'items.basketItems.product', 'items.basketItems.variation');
 
             foreach ($order->items as $item) {
+                if ($item->basket_id) {
+                    foreach ($item->basketItems as $basketItem) {
+                        if (! $basketItem->product) {
+                            continue;
+                        }
+
+                        $this->inventoryService->increase(
+                            $basketItem->product,
+                            $basketItem->variation,
+                            $basketItem->quantity,
+                            'cancellation',
+                            referenceType: 'order',
+                            referenceId: $order->id,
+                            notes: $reason,
+                            actor: $actor,
+                        );
+                    }
+
+                    continue;
+                }
+
                 if (! $item->product) {
                     continue;
                 }

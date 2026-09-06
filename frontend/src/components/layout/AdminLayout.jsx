@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/admin/inventory', label: 'Inventory', icon: '📈', permission: 'manage-inventory' },
   { to: '/admin/orders', label: 'Orders', icon: '🧾', permission: 'manage-orders' },
   { to: '/admin/coupons', label: 'Coupons', icon: '🏷️', permission: 'manage-coupons' },
+  { to: '/admin/baskets', label: 'Baskets', icon: '🧺', permission: 'manage-baskets' },
   { to: '/admin/reviews', label: 'Reviews', icon: '⭐', permission: 'manage-reviews' },
   { to: '/admin/questions', label: 'Q&A', icon: '❓', permission: 'manage-questions' },
   { to: '/admin/shipping', label: 'Shipping', icon: '🚚', permission: 'manage-settings' },

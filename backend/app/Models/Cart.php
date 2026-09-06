@@ -23,8 +23,16 @@ class Cart extends Model
         return $this->hasMany(CartItem::class);
     }
 
+    public function basketInstances(): HasMany
+    {
+        return $this->hasMany(CartBasket::class);
+    }
+
     public function getSubtotalAttribute(): float
     {
-        return (float) $this->items->sum(fn (CartItem $item) => $item->quantity * (float) $item->unit_price);
+        $itemsTotal = (float) $this->items->sum(fn (CartItem $item) => $item->quantity * (float) $item->unit_price);
+        $basketsTotal = (float) $this->basketInstances->sum(fn (CartBasket $cartBasket) => (float) $cartBasket->amount);
+
+        return $itemsTotal + $basketsTotal;
     }
 }

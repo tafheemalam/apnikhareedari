@@ -14,6 +14,8 @@ class CartResource extends JsonResource
             'cart_token' => $this->session_token,
             'items' => CartItemResource::collection($this->whenLoaded('items')),
             'items_count' => $this->whenLoaded('items', fn () => $this->items->sum('quantity')),
+            'basket_instances' => CartBasketResource::collection($this->whenLoaded('basketInstances')),
+            'basket_instances_count' => $this->whenLoaded('basketInstances', fn () => $this->basketInstances->count()),
             'subtotal' => $this->subtotal,
         ];
     }

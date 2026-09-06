@@ -15,6 +15,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'manage-inventory',
         'manage-orders',
         'manage-coupons',
+        'manage-baskets',
         'manage-reviews',
         'manage-questions',
         'manage-settings',
@@ -25,7 +26,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'Super Admin' => self::PERMISSIONS,
         'Admin' => [
             'view-dashboard', 'manage-categories', 'manage-products', 'manage-inventory',
-            'manage-orders', 'manage-coupons', 'manage-reviews', 'manage-questions', 'manage-settings',
+            'manage-orders', 'manage-coupons', 'manage-baskets', 'manage-reviews', 'manage-questions', 'manage-settings',
         ],
         'Inventory Manager' => ['view-dashboard', 'manage-inventory'],
         'Order Manager' => ['view-dashboard', 'manage-orders'],

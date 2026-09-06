@@ -29,6 +29,7 @@ class ProductResource extends JsonResource
             'featured' => (bool) $this->featured,
             'new_arrival' => (bool) $this->new_arrival,
             'best_seller' => (bool) $this->best_seller,
+            'show_in_basket' => (bool) $this->show_in_basket,
             'stock_quantity' => $this->stock_quantity,
             'in_stock' => $this->in_stock,
             'average_rating' => $this->whenAggregated('reviews', 'rating', 'avg', fn ($value) => round((float) $value, 1)),
