@@ -72,7 +72,7 @@ class CheckoutService
         if (! empty($data['coupon_code'])) {
             $coupon = Coupon::where('code', strtoupper($data['coupon_code']))->first();
 
-            if (! $coupon || ! $coupon->isValidFor($subtotal)) {
+            if (! $coupon || ! $coupon->isValidFor($subtotal, $user)) {
                 throw new RuntimeException('The applied coupon is no longer valid.');
             }
 
@@ -183,6 +183,24 @@ class CheckoutService
 
     protected function capturePayment(Order $order, string $method): void
     {
+        // JazzCash and EasyPaisa are manual transfers — the customer pays out-of-band
+        // and sends a screenshot to WhatsApp. No gateway is called; the order stays
+        // pending until an admin marks it paid.
+        if (in_array($method, ['jazzcash', 'easypaisa'], true)) {
+            Payment::create([
+                'order_id' => $order->id,
+                'gateway' => $method,
+                'transaction_id' => null,
+                'amount' => $order->total,
+                'currency' => 'PKR',
+                'status' => 'pending',
+                'gateway_response' => null,
+                'paid_at' => null,
+            ]);
+
+            return;
+        }
+
         $gateway = $method === 'cod' ? $this->gateways->cod() : $this->gateways->activeOnlineGateway();
         $result = $gateway->charge($order);
 

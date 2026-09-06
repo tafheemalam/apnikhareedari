@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use App\Models\User;
 
 class Coupon extends Model
 {
@@ -41,7 +42,7 @@ class Coupon extends Model
         return $this->hasMany(CouponUsage::class);
     }
 
-    public function isValidFor(float $orderAmount): bool
+    public function isValidFor(float $orderAmount, ?User $user = null): bool
     {
         if (! $this->status) {
             return false;
@@ -56,6 +57,10 @@ class Coupon extends Model
         }
 
         if ($this->minimum_order_amount !== null && $orderAmount < (float) $this->minimum_order_amount) {
+            return false;
+        }
+
+        if ($user && $this->usages()->where('user_id', $user->id)->exists()) {
             return false;
         }
 

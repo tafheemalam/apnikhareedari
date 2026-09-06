@@ -17,7 +17,6 @@ class UserResource extends JsonResource
             'is_active' => $this->is_active,
             'email_verified' => $this->hasVerifiedEmail(),
             'roles' => $this->getRoleNames(),
-            'permissions' => $this->getAllPermissions()->pluck('name'),
             'is_admin' => $this->isAdminUser(),
             'created_at' => $this->created_at,
         ];

@@ -33,7 +33,13 @@ class PaymentGatewayManager
 
     public function activeOnlineGateway(): PaymentGatewayInterface
     {
-        return $this->resolve(Setting::get('payment.active_gateway', 'mock'));
+        $identifier = Setting::get('payment.active_gateway', 'mock');
+
+        if ($identifier === 'mock' && app()->isProduction()) {
+            throw new RuntimeException('No real payment gateway is configured. Online payment is unavailable.');
+        }
+
+        return $this->resolve($identifier);
     }
 
     public function resolve(string $identifier): PaymentGatewayInterface

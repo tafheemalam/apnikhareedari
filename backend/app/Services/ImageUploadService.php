@@ -23,7 +23,14 @@ class ImageUploadService
      */
     public function store(UploadedFile $file, string $directory, int $maxWidth = 1600): string
     {
-        $filename = $directory.'/'.Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+        ];
+        $ext = $mimeMap[$file->getMimeType()] ?? 'jpg';
+        $filename = $directory.'/'.Str::uuid()->toString().'.'.$ext;
 
         $image = $this->manager->decodePath($file->getRealPath());
 

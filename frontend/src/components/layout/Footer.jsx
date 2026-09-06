@@ -125,10 +125,13 @@ export default function Footer() {
         <div>
           <h4 className="mb-3 text-sm font-bold text-slate-900">Follow Us</h4>
           <div className="flex gap-2">
-            {SOCIAL_LINKS.map(({ key, label, Icon }) => settings[key] && (
+            {SOCIAL_LINKS.map(({ key, label, Icon }) => {
+              const url = settings[key];
+              if (!url || !/^https?:\/\//i.test(url)) return null;
+              return (
               <a
                 key={key}
-                href={settings[key]}
+                href={url}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
@@ -137,7 +140,8 @@ export default function Footer() {
               >
                 <Icon />
               </a>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

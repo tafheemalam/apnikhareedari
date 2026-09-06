@@ -30,7 +30,7 @@ class QuestionController extends Controller
             'product_id' => $product->id,
             'user_id' => $request->user()->id,
             'question' => $request->validated('question'),
-            'status' => 'approved',
+            'status' => 'pending',
         ]);
 
         return $this->success(new ProductQuestionResource($question->load('user:id,name')), 'Question submitted', 201);

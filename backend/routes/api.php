@@ -64,7 +64,7 @@ Route::get('products/{product}/questions', [QuestionController::class, 'index'])
 Route::get('settings/public', [SettingController::class, 'index']);
 Route::get('shipping/zones', [ShippingController::class, 'zones']);
 Route::post('shipping/estimate', [ShippingController::class, 'estimate']);
-Route::post('coupons/validate', [CouponController::class, 'validateCoupon']);
+Route::post('coupons/validate', [CouponController::class, 'validateCoupon'])->middleware('throttle:10,1');
 
 // Cart works for both guests (X-Cart-Token header) and authenticated users
 Route::prefix('cart')->group(function () {
