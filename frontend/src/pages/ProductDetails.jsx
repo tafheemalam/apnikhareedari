@@ -136,7 +136,14 @@ export default function ProductDetails() {
 
   const needsVariation = product.has_variations;
   const canAddToCart = needsVariation ? !!selectedVariation : true;
-  const stock = needsVariation ? selectedVariation?.stock_quantity ?? 0 : product.stock_quantity;
+  const allAttributeNames = Object.keys(attributeGroups);
+  const allOptionsSelected = needsVariation && allAttributeNames.length > 0
+    && allAttributeNames.every((name) => !!selectedOptions[name]);
+  // null = not all options chosen yet; 0 = chosen but no matching active variation or stock=0
+  const stock = needsVariation
+    ? (selectedVariation ? (selectedVariation.stock_quantity ?? 0) : (allOptionsSelected ? 0 : null))
+    : product.stock_quantity;
+  const isOutOfStock = stock !== null && stock <= 0;
 
   async function handleAddToCart() {
     if (!canAddToCart) {
@@ -268,18 +275,20 @@ export default function ProductDetails() {
             <div className="flex items-center rounded-lg border border-slate-300">
               <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="px-3 py-2 text-slate-600">-</button>
               <span className="w-10 text-center text-sm font-medium">{quantity}</span>
-              <button onClick={() => setQuantity((q) => Math.min(stock || 1, q + 1))} className="px-3 py-2 text-slate-600">+</button>
+              <button onClick={() => setQuantity((q) => Math.min(stock ?? 99, q + 1))} className="px-3 py-2 text-slate-600">+</button>
             </div>
-            <span className="text-sm text-slate-500">
-              {stock > 0 ? `${stock} in stock` : 'Out of stock'}
-            </span>
+            {stock !== null && (
+              <span className="text-sm text-slate-500">
+                {stock > 0 ? `${stock} in stock` : 'Out of stock'}
+              </span>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               onClick={handleAddToCart}
               loading={adding}
-              disabled={stock <= 0 || (needsVariation && !canAddToCart)}
+              disabled={isOutOfStock || !canAddToCart}
               size="lg"
               className="bg-amber-500 text-white hover:bg-amber-600 focus-visible:outline-amber-500"
             >
@@ -288,7 +297,7 @@ export default function ProductDetails() {
             <Button
               onClick={handleBuyNow}
               loading={buyingNow}
-              disabled={stock <= 0 || (needsVariation && !canAddToCart)}
+              disabled={isOutOfStock || !canAddToCart}
               size="lg"
             >
               Buy Now
@@ -296,7 +305,7 @@ export default function ProductDetails() {
             <button
               type="button"
               onClick={handleOrderOnWhatsApp}
-              disabled={stock <= 0 || (needsVariation && !canAddToCart)}
+              disabled={isOutOfStock || !canAddToCart}
               className="flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#22c05e] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
