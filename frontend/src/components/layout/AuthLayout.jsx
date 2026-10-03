@@ -5,12 +5,15 @@ export default function AuthLayout() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-6 flex items-center justify-center gap-2">
-          <img src={logoIcon} alt="" className="h-11 w-auto" />
-          <span className="text-2xl font-extrabold">
-            <span className="text-orange-600">Apni</span>
-            <span className="text-teal-700">Khareedari</span>
+        <Link to="/" className="mb-6 flex flex-col items-center gap-1">
+          <span className="flex items-center justify-center gap-2">
+            <img src={logoIcon} alt="" className="h-11 w-auto" />
+            <span className="text-2xl font-extrabold">
+              <span className="text-orange-600">Apni</span>
+              <span className="text-teal-700">Khareedari</span>
+            </span>
           </span>
+          <span className="text-xs font-medium text-slate-500">Khareedari to abb yahi se hogi</span>
         </Link>
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           <Outlet />

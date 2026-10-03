@@ -7,7 +7,7 @@ import SearchBar from './SearchBar';
 import logoIcon from '../../assets/logo-icon.png';
 
 export default function Header() {
-  const { categories } = useSite();
+  const { categories, hasBasketOption } = useSite();
   const { isAuthenticated, user, logout } = useAuth();
   const { itemsCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,9 +26,12 @@ export default function Header() {
 
         <Link to="/" className="flex shrink-0 items-center gap-2">
           <img src={logoIcon} alt="" className="h-9 w-auto" />
-          <span className="text-xl font-extrabold">
-            <span className="text-orange-600">Apni</span>
-            <span className="text-teal-700">Khareedari</span>
+          <span className="flex flex-col leading-tight">
+            <span className="text-xl font-extrabold">
+              <span className="text-orange-600">Apni</span>
+              <span className="text-teal-700">Khareedari</span>
+            </span>
+            <span className="hidden text-[10px] font-medium text-slate-500 sm:block">Khareedari to abb yahi se hogi</span>
           </span>
         </Link>
 
@@ -98,12 +101,14 @@ export default function Header() {
           >
             Shop
           </NavLink>
-          <NavLink
-            to="/baskets"
-            className={({ isActive }) => `flex items-center gap-1 py-2 ${isActive ? 'text-emerald-700' : 'hover:text-emerald-700'}`}
-          >
-            🧺 Baskets
-          </NavLink>
+          {hasBasketOption && (
+            <NavLink
+              to="/baskets"
+              className={({ isActive }) => `flex items-center gap-1 py-2 ${isActive ? 'text-emerald-700' : 'hover:text-emerald-700'}`}
+            >
+              🧺 Baskets
+            </NavLink>
+          )}
           {categories.map((cat) => (
             <div key={cat.id} className="group relative">
               <NavLink
@@ -135,7 +140,7 @@ export default function Header() {
         <div className="border-t border-slate-100 px-4 py-3 lg:hidden">
           <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
             <Link to="/shop" onClick={() => setMobileOpen(false)}>Shop</Link>
-            <Link to="/baskets" onClick={() => setMobileOpen(false)}>🧺 Baskets</Link>
+            {hasBasketOption && <Link to="/baskets" onClick={() => setMobileOpen(false)}>🧺 Baskets</Link>}
             {categories.map((cat) => (
               <div key={cat.id}>
                 <Link to={`/categories/${cat.slug}`} onClick={() => setMobileOpen(false)}>

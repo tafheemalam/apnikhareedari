@@ -96,6 +96,7 @@ export default function AdminProducts() {
                 <th className="px-4 py-3">SKU</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Price</th>
+                <th className="px-4 py-3">In Basket</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -115,6 +116,9 @@ export default function AdminProducts() {
                   <td className="px-4 py-3 text-slate-500">{p.sku}</td>
                   <td className="px-4 py-3 text-slate-500">{p.category?.name}</td>
                   <td className="px-4 py-3 text-slate-700">{formatCurrency(p.sale_price ?? p.price)}</td>
+                  <td className="px-4 py-3">
+                    <Badge color={p.show_in_basket ? 'green' : 'slate'}>{p.show_in_basket ? 'Yes' : 'No'}</Badge>
+                  </td>
                   <td className="px-4 py-3">
                     <button onClick={() => handleToggle(p)}>
                       <Badge color={p.status ? 'green' : 'slate'}>{p.status ? 'Active' : 'Inactive'}</Badge>

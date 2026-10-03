@@ -100,6 +100,7 @@ export default function Footer() {
             <img src={logoIcon} alt="" className="h-6 w-auto" />
             <h4 className="text-sm font-bold text-slate-900">{settings['store.name']}</h4>
           </div>
+          <p className="mb-2 text-xs italic text-slate-400">Khareedari to abb yahi se hogi</p>
           <p className="text-xs text-slate-500">{settings['store.address']}</p>
           <p className="mt-2 text-xs text-slate-500">{settings['store.phone']}</p>
           <p className="text-xs text-slate-500">{settings['store.email']}</p>
