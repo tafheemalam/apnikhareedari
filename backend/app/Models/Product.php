@@ -22,6 +22,7 @@ class Product extends Model
         'barcode',
         'short_description',
         'description',
+        'video',
         'specifications',
         'price',
         'sale_price',

@@ -50,6 +50,8 @@ class ProductRequest extends FormRequest
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'primary_image_index' => ['nullable', 'integer', 'min:0'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/webm,video/x-m4v', 'max:20480'],
+            'remove_video' => ['boolean'],
         ];
     }
 }

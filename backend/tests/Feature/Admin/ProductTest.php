@@ -57,6 +57,74 @@ class ProductTest extends TestCase
         Storage::disk('public')->assertExists($product->images->first()->image);
     }
 
+    public function test_admin_can_create_a_product_with_a_video(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $response = $this->actingAs($admin)->post('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Product With Video',
+            'sku' => 'VIDEO-001',
+            'price' => 2500,
+            'stock_quantity' => 10,
+            'status' => true,
+            'video' => UploadedFile::fake()->create('demo.mp4', 2048, 'video/mp4'),
+        ]);
+
+        $response->assertCreated()->assertJsonPath('success', true);
+        $this->assertNotNull($response->json('data.video_url'));
+
+        $product = \App\Models\Product::where('sku', 'VIDEO-001')->firstOrFail();
+        Storage::disk('public')->assertExists($product->video);
+    }
+
+    public function test_admin_can_replace_and_remove_a_products_video(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $product = \App\Models\Product::factory()->create(['category_id' => $category->id]);
+        $this->app->make(\App\Services\InventoryService::class)->initialize($product, null, 10);
+
+        $firstVideoResponse = $this->actingAs($admin)->post("/api/admin/products/{$product->id}?_method=PUT", [
+            'category_id' => $category->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'price' => $product->price,
+            'video' => UploadedFile::fake()->create('first.mp4', 1024, 'video/mp4'),
+        ]);
+        $firstVideoResponse->assertOk();
+        $firstPath = $product->fresh()->video;
+        Storage::disk('public')->assertExists($firstPath);
+
+        $replaceResponse = $this->actingAs($admin)->post("/api/admin/products/{$product->id}?_method=PUT", [
+            'category_id' => $category->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'price' => $product->price,
+            'video' => UploadedFile::fake()->create('second.mp4', 1024, 'video/mp4'),
+        ]);
+        $replaceResponse->assertOk();
+        $secondPath = $product->fresh()->video;
+        $this->assertNotEquals($firstPath, $secondPath);
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($secondPath);
+
+        $removeResponse = $this->actingAs($admin)->post("/api/admin/products/{$product->id}?_method=PUT", [
+            'category_id' => $category->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'price' => $product->price,
+            'remove_video' => true,
+        ]);
+        $removeResponse->assertOk()->assertJsonPath('data.video_url', null);
+        Storage::disk('public')->assertMissing($secondPath);
+        $this->assertNull($product->fresh()->video);
+    }
+
     public function test_admin_can_create_a_product_with_stock(): void
     {
         $admin = $this->createAdmin();

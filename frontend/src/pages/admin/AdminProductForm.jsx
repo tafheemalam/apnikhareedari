@@ -40,6 +40,9 @@ export default function AdminProductForm() {
   const [product, setProduct] = useState(null);
   const [newImages, setNewImages] = useState([]);
   const [newImagePreviews, setNewImagePreviews] = useState([]);
+  const [newVideo, setNewVideo] = useState(null);
+  const [newVideoPreview, setNewVideoPreview] = useState(null);
+  const [removeVideo, setRemoveVideo] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState(null);
@@ -51,10 +54,27 @@ export default function AdminProductForm() {
     return () => newImagePreviews.forEach((url) => URL.revokeObjectURL(url));
   }, [newImagePreviews]);
 
+  useEffect(() => {
+    if (!newVideo) return;
+    const url = URL.createObjectURL(newVideo);
+    setNewVideoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [newVideo]);
+
   function handleImageSelect(e) {
     const files = Array.from(e.target.files);
     setNewImages(files);
     setNewImagePreviews(files.map((file) => URL.createObjectURL(file)));
+  }
+
+  function handleVideoSelect(e) {
+    setNewVideo(e.target.files[0] || null);
+    setRemoveVideo(false);
+  }
+
+  function handleRemoveVideo() {
+    setNewVideo(null);
+    setRemoveVideo(true);
   }
 
   useEffect(() => {
@@ -96,12 +116,14 @@ export default function AdminProductForm() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form, images: newImages };
+      const payload = { ...form, images: newImages, video: newVideo, remove_video: removeVideo };
       if (isEdit) {
         await productService.updateProduct(id, payload);
         toast.success('Product updated successfully');
         setNewImages([]);
         setNewImagePreviews([]);
+        setNewVideo(null);
+        setRemoveVideo(false);
         loadProduct();
       } else {
         const created = await productService.createProduct(payload);
@@ -288,6 +310,35 @@ export default function AdminProductForm() {
             className="text-sm disabled:opacity-50"
           />
           <p className="mt-1 text-xs text-slate-400">You can select multiple images. The first uploaded image becomes primary if none is set.</p>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-sm font-bold text-slate-900">Product Video</h2>
+          {(newVideoPreview || (product?.video_url && !removeVideo)) ? (
+            <div className="mb-4">
+              <video src={newVideoPreview || product.video_url} controls className="h-56 w-full max-w-sm rounded-lg bg-black sm:w-auto" />
+              <div className="mt-2">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={handleRemoveVideo}
+                  className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                >
+                  {newVideoPreview ? 'Cancel selection' : 'Remove video'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mb-3 text-xs text-slate-400">No video uploaded yet.</p>
+          )}
+          <input
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm,video/x-m4v"
+            disabled={saving}
+            onChange={handleVideoSelect}
+            className="text-sm disabled:opacity-50"
+          />
+          <p className="mt-1 text-xs text-slate-400">One short video (max 20MB) shown alongside the product images.</p>
         </div>
 
         <Button type="submit" size="lg" loading={saving}>{isEdit ? 'Save Changes' : 'Create Product'}</Button>

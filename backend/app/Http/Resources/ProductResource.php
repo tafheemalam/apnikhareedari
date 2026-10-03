@@ -18,6 +18,7 @@ class ProductResource extends JsonResource
             'barcode' => $this->barcode,
             'short_description' => $this->short_description,
             'description' => $this->description,
+            'video_url' => $this->video ? asset('storage/'.$this->video) : null,
             'specifications' => $this->specifications,
             'price' => $this->price,
             'sale_price' => $this->sale_price,

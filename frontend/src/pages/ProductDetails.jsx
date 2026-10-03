@@ -30,6 +30,7 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [showingVideo, setShowingVideo] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
@@ -43,6 +44,7 @@ export default function ProductDetails() {
       .then((data) => {
         setProduct(data);
         setActiveImage(0);
+        setShowingVideo(false);
         setSelectedOptions({});
         setQuantity(1);
       })
@@ -117,7 +119,10 @@ export default function ProductDetails() {
   useEffect(() => {
     if (!variantImageUrl) return;
     const idx = images.findIndex((img) => img.url === variantImageUrl);
-    if (idx >= 0) setActiveImage(idx);
+    if (idx >= 0) {
+      setActiveImage(idx);
+      setShowingVideo(false);
+    }
   }, [variantImageUrl, images]);
 
   // ...and clicking a thumbnail does the reverse: if that photo belongs to
@@ -125,6 +130,7 @@ export default function ProductDetails() {
   // gallery never fall out of sync with each other.
   function handleThumbnailClick(img, index) {
     setActiveImage(index);
+    setShowingVideo(false);
     const colorOpt = img.variation && findColorOption(img.variation.options);
     if (colorOpt) {
       setSelectedOptions((prev) => ({ ...prev, [colorOpt.attribute_name]: colorOpt.attribute_value }));
@@ -210,20 +216,35 @@ export default function ProductDetails() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div>
           <div className="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-            {images[activeImage]?.url ? (
+            {showingVideo && product.video_url ? (
+              <video src={product.video_url} controls autoPlay playsInline className="h-full w-full bg-black" />
+            ) : images[activeImage]?.url ? (
               <ZoomableImage src={images[activeImage].url} alt={product.name} />
             ) : (
               <div className="flex h-full items-center justify-center text-slate-300">No image</div>
             )}
           </div>
-          {images.length > 1 && (
+          {(images.length > 1 || product.video_url) && (
             <div className="mt-3 flex gap-2">
+              {product.video_url && (
+                <button
+                  type="button"
+                  onClick={() => setShowingVideo(true)}
+                  className={`relative h-16 w-16 overflow-hidden rounded-lg border-2 bg-slate-900 ${showingVideo ? 'border-emerald-600' : 'border-transparent'}`}
+                  aria-label="Play product video"
+                >
+                  <video src={product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-70" />
+                  <span className="absolute inset-0 flex items-center justify-center text-white">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                </button>
+              )}
               {images.map((img, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => handleThumbnailClick(img, i)}
-                  className={`h-16 w-16 overflow-hidden rounded-lg border-2 ${i === activeImage ? 'border-emerald-600' : 'border-transparent'}`}
+                  className={`h-16 w-16 overflow-hidden rounded-lg border-2 ${!showingVideo && i === activeImage ? 'border-emerald-600' : 'border-transparent'}`}
                 >
                   {img.url && <img src={img.url} alt="" className="h-full w-full object-cover" />}
                 </button>

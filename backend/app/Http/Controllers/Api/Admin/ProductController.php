@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\ImageUploadService;
 use App\Services\InventoryService;
+use App\Services\VideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class ProductController extends Controller
     public function __construct(
         protected ImageUploadService $imageUploadService,
         protected InventoryService $inventoryService,
+        protected VideoUploadService $videoUploadService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -42,13 +44,14 @@ class ProductController extends Controller
     public function store(ProductRequest $request): JsonResponse
     {
         $product = DB::transaction(function () use ($request) {
-            $data = $request->safe()->except(['images', 'primary_image_index', 'stock_quantity', 'low_stock_threshold']);
+            $data = $request->safe()->except(['images', 'primary_image_index', 'stock_quantity', 'low_stock_threshold', 'video', 'remove_video']);
             $data['slug'] = $data['slug'] ?? Str::slug($request->string('name'));
             $data = array_merge($data, $this->booleanFlags($request));
 
             $product = Product::create($data);
 
             $this->storeImages($product, $request);
+            $this->storeVideo($product, $request);
 
             if (! $product->has_variations) {
                 $this->inventoryService->initialize(
@@ -79,7 +82,7 @@ class ProductController extends Controller
     public function update(ProductRequest $request, Product $product): JsonResponse
     {
         DB::transaction(function () use ($request, $product) {
-            $data = $request->safe()->except(['images', 'primary_image_index', 'stock_quantity', 'low_stock_threshold']);
+            $data = $request->safe()->except(['images', 'primary_image_index', 'stock_quantity', 'low_stock_threshold', 'video', 'remove_video']);
 
             if (! empty($data['name']) && empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
@@ -90,6 +93,7 @@ class ProductController extends Controller
             $product->update($data);
 
             $this->storeImages($product, $request);
+            $this->storeVideo($product, $request);
         });
 
         $product->load(['category', 'images', 'variations.options', 'variations.inventory', 'inventory']);
@@ -102,6 +106,7 @@ class ProductController extends Controller
         foreach ($product->images as $image) {
             $this->imageUploadService->delete($image->image);
         }
+        $this->videoUploadService->delete($product->video);
 
         $product->delete();
 
@@ -157,6 +162,21 @@ class ProductController extends Controller
         }
 
         return $flags;
+    }
+
+    protected function storeVideo(Product $product, Request $request): void
+    {
+        if ($request->hasFile('video')) {
+            $this->videoUploadService->delete($product->video);
+            $product->update(['video' => $this->videoUploadService->store($request->file('video'), "products/{$product->id}/video")]);
+
+            return;
+        }
+
+        if ($request->boolean('remove_video') && $product->video) {
+            $this->videoUploadService->delete($product->video);
+            $product->update(['video' => null]);
+        }
     }
 
     protected function storeImages(Product $product, Request $request): void
