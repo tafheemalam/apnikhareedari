@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Input, Textarea } from '../components/ui/FormField';
 import Button from '../components/ui/Button';
+import * as contactService from '../services/contactService';
+import { extractErrorMessage } from '../utils/format';
 
 export default function ContactUs() {
   const { settings } = useSite();
@@ -20,14 +22,18 @@ export default function ContactUs() {
     setForm((f) => ({ ...f, name: f.name || user.name || '', email: f.email || user.email || '' }));
   }, [user]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setSending(true);
-    setTimeout(() => {
+    try {
+      await contactService.submitContactForm(form);
       toast.success("Thanks for reaching out! We'll get back to you soon.");
       setForm({ name: user?.name || '', email: user?.email || '', message: '' });
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
       setSending(false);
-    }, 600);
+    }
   }
 
   return (

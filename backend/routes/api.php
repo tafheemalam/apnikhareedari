@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\CartBasketController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -65,6 +66,7 @@ Route::get('settings/public', [SettingController::class, 'index']);
 Route::get('shipping/zones', [ShippingController::class, 'zones']);
 Route::post('shipping/estimate', [ShippingController::class, 'estimate']);
 Route::post('coupons/validate', [CouponController::class, 'validateCoupon'])->middleware('throttle:10,1');
+Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:5,1');
 
 // Cart works for both guests (X-Cart-Token header) and authenticated users
 Route::prefix('cart')->group(function () {
