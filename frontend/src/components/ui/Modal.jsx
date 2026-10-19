@@ -4,7 +4,7 @@ export default function Modal({ open, title, onClose, children, size = 'md' }) {
   const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 py-10" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 py-10">
       <div
         className={`w-full ${sizes[size]} rounded-xl bg-white shadow-xl`}
         onClick={(e) => e.stopPropagation()}
