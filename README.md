@@ -52,10 +52,9 @@ docker compose exec app php artisan key:generate
 docker compose exec app php artisan storage:link
 docker compose exec app php artisan migrate --seed
 
-# 2. Frontend (runs on the host, not in Docker)
-cd frontend
-npm install
-npm run dev
+# 2. Frontend: also runs in Docker (see frontend service below) — nothing to
+# install or start by hand. `docker compose up -d` brings it up along with
+# everything else, and it survives Docker Desktop restarts the same way.
 ```
 
 Then open:
@@ -66,7 +65,7 @@ Then open:
 
 ## 3. Laravel Installation Details
 
-The `docker-compose.yml` at the repo root defines four services:
+The `docker-compose.yml` at the repo root defines these services:
 
 | Service | Purpose |
 |---|---|
@@ -75,6 +74,9 @@ The `docker-compose.yml` at the repo root defines four services:
 | `mysql` | MySQL 8, exposed on `localhost:3307` (host) → `3306` (container) |
 | `queue` | Runs `php artisan queue:work`, processes queued notification emails |
 | `mailhog` | Local SMTP catcher, exposed on `localhost:8025` (web UI) |
+| `frontend` | Vite dev server (Node 22), exposed on `localhost:5173` — see note below |
+
+**Frontend container note:** `frontend/` is bind-mounted into the container, but `node_modules` lives in its own named volume (`akd_frontend_node_modules`) instead — npm's `esbuild`/`rollup` native binaries are platform-specific, so a Windows-installed `node_modules` can't run inside the Linux container and vice versa. The container runs `npm install && npm run dev` on every start, so first boot takes a bit longer while it installs into that volume; subsequent restarts reuse it. `vite.config.js` also sets `watch.usePolling` — without it, file edits made on a Windows host don't reliably reach the container's file watcher over the bind mount, silently breaking hot-reload.
 
 All PHP commands run **inside** the `app` container:
 
@@ -182,15 +184,15 @@ The API is then live at `http://localhost:8000/api`. Health check: `GET http://l
 
 ## 10. React Frontend Setup
 
-The frontend runs directly on your machine (not in Docker) via Node:
+The frontend runs in Docker too (the `frontend` service) — `docker compose up -d` starts it along with everything else, nothing to install by hand. It's reachable at `http://localhost:5173` and talks to the API at whatever `VITE_API_URL` points to in `frontend/.env`.
+
+To run it on the host instead (e.g. outside Docker entirely):
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Opens at `http://localhost:5173`. It talks to the API at whatever `VITE_API_URL` points to in `frontend/.env`.
 
 ## 11. Build Commands
 

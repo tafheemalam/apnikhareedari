@@ -8,6 +8,13 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // Running inside Docker Desktop on Windows: native fs-change events from
+    // the Windows host don't reliably reach the Linux container's watcher
+    // over the bind mount, so HMR silently stops working without polling.
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
     // Pre-transform the customer-facing entry chain at server startup instead
     // of waiting for the first real page request to trigger it — this is
     // what makes the very first page load (product listing, home) noticeably
