@@ -258,7 +258,7 @@ export default function AdminProductForm() {
                 const busy = deletingImageId === img.id || settingPrimaryId === img.id;
                 return (
                   <div key={img.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-slate-200">
-                    <img src={img.url} alt="" className="h-full w-full object-cover" />
+                    <img src={img.url} alt="" className="h-full w-full object-contain" />
                     {img.is_primary && <span className="absolute left-1 top-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Primary</span>}
                     {busy && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -289,7 +289,7 @@ export default function AdminProductForm() {
               <div className="flex flex-wrap gap-3">
                 {newImagePreviews.map((src, i) => (
                   <div key={i} className="relative h-24 w-24 overflow-hidden rounded-lg border border-dashed border-slate-300">
-                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    <img src={src} alt="" className="h-full w-full object-contain" />
                     {saving && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                         <span className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />

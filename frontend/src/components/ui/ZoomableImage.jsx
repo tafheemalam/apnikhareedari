@@ -26,7 +26,7 @@ export default function ZoomableImage({ src, alt, zoom = 2, className = '' }) {
       <img
         src={src}
         alt={alt}
-        className="h-full w-full object-cover transition-transform duration-200 ease-out"
+        className="h-full w-full object-contain transition-transform duration-200 ease-out"
         style={{ transform: zoomed ? `scale(${zoom})` : 'scale(1)', transformOrigin: origin }}
       />
     </div>

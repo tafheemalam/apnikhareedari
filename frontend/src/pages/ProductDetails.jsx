@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import * as catalogService from '../services/catalogService';
+import * as wishlistService from '../services/wishlistService';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -35,6 +36,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -51,6 +54,17 @@ export default function ProductDetails() {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !product) {
+      setInWishlist(false);
+      return;
+    }
+    wishlistService
+      .getWishlist()
+      .then((items) => setInWishlist(items.some((i) => i.product.id === product.id)))
+      .catch(() => {});
+  }, [isAuthenticated, product]);
 
   const attributeGroups = useMemo(() => {
     if (!product?.variations?.length) return {};
@@ -191,6 +205,33 @@ export default function ProductDetails() {
     }
   }
 
+  async function handleToggleWishlist() {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setWishlistBusy(true);
+    try {
+      if (inWishlist) {
+        await wishlistService.removeFromWishlist(product.id);
+        setInWishlist(false);
+      } else {
+        await wishlistService.addToWishlist(product.id);
+        setInWishlist(true);
+        toast.success('Added to wishlist');
+      }
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setWishlistBusy(false);
+    }
+  }
+
+  function showImageAt(index) {
+    setShowingVideo(false);
+    setActiveImage((index + images.length) % images.length);
+  }
+
   function handleOrderOnWhatsApp() {
     if (!canAddToCart) {
       toast.error('Please select all options first');
@@ -215,13 +256,44 @@ export default function ProductDetails() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div>
-          <div className="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+          <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {showingVideo && product.video_url ? (
               <video src={product.video_url} controls autoPlay playsInline className="h-full w-full bg-black" />
             ) : images[activeImage]?.url ? (
               <ZoomableImage src={images[activeImage].url} alt={product.name} />
             ) : (
               <div className="flex h-full items-center justify-center text-slate-300">No image</div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleToggleWishlist}
+              disabled={wishlistBusy}
+              aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-lg shadow-md backdrop-blur transition-colors hover:bg-white"
+            >
+              <span className={inWishlist ? 'text-red-500' : 'text-slate-400'}>{inWishlist ? '♥' : '♡'}</span>
+            </button>
+
+            {!showingVideo && images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => showImageAt(activeImage - 1)}
+                  aria-label="Previous image"
+                  className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md backdrop-blur transition-colors hover:bg-white"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => showImageAt(activeImage + 1)}
+                  aria-label="Next image"
+                  className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md backdrop-blur transition-colors hover:bg-white"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5"><path d="M9 18l6-6-6-6" /></svg>
+                </button>
+              </>
             )}
           </div>
           {(images.length > 1 || product.video_url) && (
@@ -246,7 +318,7 @@ export default function ProductDetails() {
                   onClick={() => handleThumbnailClick(img, i)}
                   className={`h-16 w-16 overflow-hidden rounded-lg border-2 ${!showingVideo && i === activeImage ? 'border-emerald-600' : 'border-transparent'}`}
                 >
-                  {img.url && <img src={img.url} alt="" className="h-full w-full object-cover" />}
+                  {img.url && <img src={img.url} alt="" className="h-full w-full object-contain" />}
                 </button>
               ))}
             </div>
