@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY hardening.ini /usr/local/etc/php/conf.d/hardening.ini
+COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
 WORKDIR /var/www/html
 
