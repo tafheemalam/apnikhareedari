@@ -31,6 +31,7 @@ export default function Home() {
   const { categories } = useSite();
   const [state, setState] = useState({ featured: [], newArrivals: [], bestSellers: [], onSale: [], loading: true });
   const [banners, setBanners] = useState([]);
+  const [bannersLoaded, setBannersLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -53,7 +54,11 @@ export default function Home() {
       }
     }
     load();
-    catalogService.getBanners().then(setBanners).catch(() => {});
+    catalogService
+      .getBanners()
+      .then(setBanners)
+      .catch((err) => console.error('Failed to load homepage banners:', err))
+      .finally(() => setBannersLoaded(true));
   }, []);
 
   return (
@@ -61,6 +66,10 @@ export default function Home() {
       {banners.length > 0 ? (
         <div className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
           <HeroSlider banners={banners} />
+        </div>
+      ) : !bannersLoaded ? (
+        <div className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
+          <div className="aspect-[16/9] w-full animate-pulse rounded-xl bg-slate-100 sm:aspect-[2.5/1]" />
         </div>
       ) : (
         <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white">
