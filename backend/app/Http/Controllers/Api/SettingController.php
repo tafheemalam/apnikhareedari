@@ -16,6 +16,8 @@ class SettingController extends Controller
     protected const PUBLIC_KEYS = [
         'store.name', 'store.logo', 'store.favicon', 'store.email', 'store.phone', 'store.address',
         'payment.cod_enabled', 'payment.online_enabled',
+        'payment.jazzcash_enabled', 'payment.easypaisa_enabled',
+        'payment.mobile_payment_number', 'payment.account_title', 'payment.whatsapp_number',
         'shipping.default_rate', 'shipping.free_shipping_threshold',
         'tax.enabled', 'tax.percentage',
         'social.facebook', 'social.instagram', 'social.tiktok', 'social.youtube',
