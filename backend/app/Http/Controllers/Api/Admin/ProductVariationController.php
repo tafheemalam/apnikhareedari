@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductVariationRequest;
 use App\Http\Resources\ProductVariationResource;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariation;
 use App\Models\ProductVariationOption;
 use App\Services\ImageUploadService;
@@ -37,7 +38,11 @@ class ProductVariationController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                $data['image'] = $this->imageUploadService->store($request->file('image'), "products/{$product->id}/variations");
+                $data['image'] = $this->imageUploadService->store(
+                    $request->file('image'),
+                    "products/{$product->id}/variations",
+                    dedupeScope: "products/{$product->id}",
+                );
             }
 
             $variation = $product->variations()->create($data);
@@ -82,10 +87,14 @@ class ProductVariationController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                $this->imageUploadService->delete($variation->image);
-                $data['image'] = $this->imageUploadService->store($request->file('image'), "products/{$variation->product_id}/variations");
+                $this->deleteImageIfUnused($variation, $variation->image);
+                $data['image'] = $this->imageUploadService->store(
+                    $request->file('image'),
+                    "products/{$variation->product_id}/variations",
+                    dedupeScope: "products/{$variation->product_id}",
+                );
             } elseif ($request->boolean('remove_image')) {
-                $this->imageUploadService->delete($variation->image);
+                $this->deleteImageIfUnused($variation, $variation->image);
                 $data['image'] = null;
             }
 
@@ -112,7 +121,7 @@ class ProductVariationController extends Controller
     {
         abort_unless($variation->product_id === $product->id, 404);
 
-        $this->imageUploadService->delete($variation->image);
+        $this->deleteImageIfUnused($variation, $variation->image);
         $variation->delete();
 
         if ($product->variations()->count() === 0) {
@@ -120,5 +129,29 @@ class ProductVariationController extends Controller
         }
 
         return $this->success(null, 'Variation deleted successfully');
+    }
+
+    /**
+     * Deleting a variation's image used to always remove the physical file —
+     * but since storing now reuses an identical file already belonging to the
+     * product (or another variation) instead of copying it, that same path can
+     * be referenced from more than one place. Only unlink it from disk once
+     * nothing else still points to it.
+     */
+    protected function deleteImageIfUnused(ProductVariation $variation, ?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        $stillUsed = ProductImage::where('product_id', $variation->product_id)->where('image', $path)->exists()
+            || ProductVariation::where('product_id', $variation->product_id)
+                ->where('id', '!=', $variation->id)
+                ->where('image', $path)
+                ->exists();
+
+        if (! $stillUsed) {
+            $this->imageUploadService->delete($path);
+        }
     }
 }

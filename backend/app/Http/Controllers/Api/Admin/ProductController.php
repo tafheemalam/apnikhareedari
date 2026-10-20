@@ -137,7 +137,20 @@ class ProductController extends Controller
     {
         abort_unless($image->product_id === $product->id, 404);
 
-        $this->imageUploadService->delete($image->image);
+        // Storing now reuses an identical file already in the product's own
+        // tree (e.g. the same photo re-picked for a variation) instead of
+        // copying it, so this path may still be referenced elsewhere — only
+        // unlink it from disk once nothing else points to it.
+        $stillUsed = ProductImage::where('product_id', $product->id)
+            ->where('id', '!=', $image->id)
+            ->where('image', $image->image)
+            ->exists()
+            || $product->variations()->where('image', $image->image)->exists();
+
+        if (! $stillUsed) {
+            $this->imageUploadService->delete($image->image);
+        }
+
         $wasPrimary = $image->is_primary;
         $image->delete();
 

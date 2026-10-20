@@ -219,4 +219,44 @@ class ProductTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_a_variation_image_identical_to_a_product_image_reuses_the_same_file_in_the_gallery(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $created = $this->actingAs($admin)->post('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Variant T-Shirt',
+            'sku' => 'TSHIRT-VAR-002',
+            'price' => 2000,
+            'has_variations' => true,
+            'status' => true,
+            'images' => [UploadedFile::fake()->image('shirt.jpg', 1000, 1000)],
+        ])->assertCreated()->json('data');
+
+        $variationResponse = $this->actingAs($admin)->post("/api/admin/products/{$created['id']}/variations", [
+            'sku' => 'TSHIRT-VAR-002-RED',
+            'quantity' => 10,
+            'options' => [['attribute_name' => 'Color', 'attribute_value' => 'Red']],
+            // Same fake image params as the product photo above, so the
+            // encoded bytes this service stores come out identical.
+            'image' => UploadedFile::fake()->image('shirt.jpg', 1000, 1000),
+        ]);
+
+        $variationResponse->assertCreated();
+
+        // Same URL means the frontend gallery's existing de-dup (which compares
+        // image URLs) will correctly show this photo once instead of twice.
+        $this->assertSame($created['images'][0]['url'], $variationResponse->json('data.image_url'));
+
+        $productImagePath = \App\Models\Product::find($created['id'])->images->first()->image;
+        Storage::disk('public')->assertExists($productImagePath);
+
+        // Deleting the variation must not remove the file the product still needs.
+        $this->actingAs($admin)->delete("/api/admin/products/{$created['id']}/variations/{$variationResponse->json('data.id')}")
+            ->assertOk();
+        Storage::disk('public')->assertExists($productImagePath);
+    }
 }
