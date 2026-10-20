@@ -25,6 +25,6 @@ class OrderStatusChangedNotification extends Notification implements ShouldQueue
             ->subject("Order {$this->order->order_number} Update")
             ->greeting("Hi {$this->order->shipping_full_name},")
             ->line("Your order **{$this->order->order_number}** status has been updated to: **".ucfirst($this->order->status).'**.')
-            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/orders/{$this->order->order_number}");
+            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/account/orders/{$this->order->order_number}");
     }
 }

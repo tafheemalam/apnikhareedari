@@ -25,6 +25,6 @@ class PaymentConfirmedNotification extends Notification implements ShouldQueue
             ->subject("Payment Received - {$this->order->order_number}")
             ->greeting("Hi {$this->order->shipping_full_name},")
             ->line("We've received your payment of PKR ".number_format((float) $this->order->total, 2)." for order **{$this->order->order_number}**.")
-            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/orders/{$this->order->order_number}");
+            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/account/orders/{$this->order->order_number}");
     }
 }

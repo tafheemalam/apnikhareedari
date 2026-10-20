@@ -33,7 +33,7 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
         }
 
         return $mail
-            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/orders/{$this->order->order_number}")
+            ->action('View Order', rtrim(config('app.frontend_url'), '/')."/account/orders/{$this->order->order_number}")
             ->line('We will notify you as your order status changes.');
     }
 }
