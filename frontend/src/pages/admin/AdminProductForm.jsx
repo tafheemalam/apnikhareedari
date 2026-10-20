@@ -55,7 +55,10 @@ export default function AdminProductForm() {
   }, [newImagePreviews]);
 
   useEffect(() => {
-    if (!newVideo) return;
+    if (!newVideo) {
+      setNewVideoPreview(null);
+      return;
+    }
     const url = URL.createObjectURL(newVideo);
     setNewVideoPreview(url);
     return () => URL.revokeObjectURL(url);
@@ -65,6 +68,11 @@ export default function AdminProductForm() {
     const files = Array.from(e.target.files);
     setNewImages(files);
     setNewImagePreviews(files.map((file) => URL.createObjectURL(file)));
+  }
+
+  function handleRemoveNewImage(index) {
+    setNewImages((files) => files.filter((_, i) => i !== index));
+    setNewImagePreviews((previews) => previews.filter((_, i) => i !== index));
   }
 
   function handleVideoSelect(e) {
@@ -290,10 +298,19 @@ export default function AdminProductForm() {
                 {newImagePreviews.map((src, i) => (
                   <div key={i} className="relative h-24 w-24 overflow-hidden rounded-lg border border-dashed border-slate-300">
                     <img src={src} alt="" className="h-full w-full object-contain" />
-                    {saving && (
+                    {saving ? (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                         <span className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(i)}
+                        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white hover:bg-black/80"
+                        aria-label="Remove image"
+                      >
+                        ×
+                      </button>
                     )}
                   </div>
                 ))}
