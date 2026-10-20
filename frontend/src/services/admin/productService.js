@@ -36,6 +36,11 @@ export async function bulkUpdateProductStatus(ids, status) {
   return data.data;
 }
 
+export async function generateSku(categoryId) {
+  const { data } = await api.post('/admin/products/generate-sku', { category_id: categoryId });
+  return data.data;
+}
+
 export async function deleteProductImage(productId, imageId) {
   const { data } = await api.delete(`/admin/products/${productId}/images/${imageId}`);
   return data;

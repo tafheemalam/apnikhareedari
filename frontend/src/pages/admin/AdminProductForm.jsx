@@ -47,6 +47,7 @@ export default function AdminProductForm() {
   const [saving, setSaving] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState(null);
+  const [generatingSku, setGeneratingSku] = useState(false);
 
   // Revoke the object URLs whenever the selection changes or the page unmounts,
   // otherwise each preview leaks memory for the life of the tab.
@@ -78,6 +79,22 @@ export default function AdminProductForm() {
   function handleVideoSelect(e) {
     setNewVideo(e.target.files[0] || null);
     setRemoveVideo(false);
+  }
+
+  async function handleGenerateSku() {
+    if (!form.category_id) {
+      toast.error('Pick a category first');
+      return;
+    }
+    setGeneratingSku(true);
+    try {
+      const { sku } = await productService.generateSku(form.category_id);
+      setForm((f) => ({ ...f, sku }));
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setGeneratingSku(false);
+    }
   }
 
   function handleRemoveVideo() {
@@ -192,7 +209,25 @@ export default function AdminProductForm() {
               })}
             </Select>
             <Input label="Product Name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <Input label="SKU" required value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} />
+            <div className="flex items-end gap-2">
+              <Input
+                label="SKU"
+                required
+                value={form.sku}
+                onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                loading={generatingSku}
+                disabled={!form.category_id}
+                onClick={handleGenerateSku}
+              >
+                Generate
+              </Button>
+            </div>
             <Input label="Barcode" value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} />
             <Input label="Short Description" className="sm:col-span-2" value={form.short_description} onChange={(e) => setForm((f) => ({ ...f, short_description: e.target.value }))} />
             <Textarea label="Full Description" className="sm:col-span-2" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />

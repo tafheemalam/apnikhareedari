@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\ImageUploadService;
@@ -131,6 +132,33 @@ class ProductController extends Controller
         $count = Product::whereIn('id', $validated['ids'])->update(['status' => $validated['status']]);
 
         return $this->success(['updated' => $count], 'Product status updated');
+    }
+
+    /**
+     * Suggest a SKU from the chosen category — e.g. "MOBI-0007" for the 7th
+     * product (with a SKU in that sequence) under a "mobile-accessories"
+     * category. Admins can still edit the result; this just gives them a
+     * sensible, collision-free starting point instead of a blank field.
+     */
+    public function generateSku(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+        ]);
+
+        $category = Category::findOrFail($validated['category_id']);
+
+        $letters = strtoupper(preg_replace('/[^a-z0-9]/i', '', $category->slug));
+        $prefix = substr($letters, 0, 4) ?: 'PROD';
+
+        $number = Product::where('sku', 'like', "{$prefix}-%")->count() + 1;
+
+        do {
+            $sku = sprintf('%s-%04d', $prefix, $number);
+            $number++;
+        } while (Product::where('sku', $sku)->exists());
+
+        return $this->success(['sku' => $sku]);
     }
 
     public function deleteImage(Product $product, ProductImage $image): JsonResponse

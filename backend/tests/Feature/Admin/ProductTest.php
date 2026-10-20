@@ -259,4 +259,33 @@ class ProductTest extends TestCase
             ->assertOk();
         Storage::disk('public')->assertExists($productImagePath);
     }
+
+    public function test_sku_is_generated_from_the_categorys_slug_and_does_not_collide(): void
+    {
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create(['name' => 'Mobile Accessories', 'slug' => 'mobile-accessories']);
+
+        $first = $this->actingAs($admin)
+            ->postJson('/api/admin/products/generate-sku', ['category_id' => $category->id])
+            ->assertOk()
+            ->json('data.sku');
+
+        $this->assertSame('MOBI-0001', $first);
+
+        $this->actingAs($admin)->postJson('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Phone Case',
+            'sku' => $first,
+            'price' => 500,
+            'stock_quantity' => 10,
+            'status' => true,
+        ])->assertCreated();
+
+        $second = $this->actingAs($admin)
+            ->postJson('/api/admin/products/generate-sku', ['category_id' => $category->id])
+            ->assertOk()
+            ->json('data.sku');
+
+        $this->assertSame('MOBI-0002', $second);
+    }
 }

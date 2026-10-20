@@ -123,6 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
         Route::apiResource('products', AdminProductController::class);
         Route::patch('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus']);
         Route::post('products/bulk-status', [AdminProductController::class, 'bulkUpdateStatus']);
+        Route::post('products/generate-sku', [AdminProductController::class, 'generateSku']);
         Route::delete('products/{product}/images/{image}', [AdminProductController::class, 'deleteImage']);
         Route::patch('products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage']);
 
