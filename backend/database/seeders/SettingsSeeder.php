@@ -22,6 +22,11 @@ class SettingsSeeder extends Seeder
                 'payment.cod_enabled' => '1',
                 'payment.online_enabled' => '1',
                 'payment.active_gateway' => 'mock',
+                'payment.jazzcash_enabled' => '0',
+                'payment.easypaisa_enabled' => '0',
+                'payment.mobile_payment_number' => null,
+                'payment.account_title' => null,
+                'payment.whatsapp_number' => null,
             ],
             'shipping' => [
                 'shipping.default_rate' => '250',
