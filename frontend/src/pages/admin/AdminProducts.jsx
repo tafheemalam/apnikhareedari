@@ -20,9 +20,12 @@ export default function AdminProducts() {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   function load() {
     setLoading(true);
+    setSelectedIds([]);
     productService
       .getProducts({ page, search: search || undefined, category_id: categoryId || undefined, per_page: 15 })
       .then(setResult)
@@ -43,6 +46,27 @@ export default function AdminProducts() {
   async function handleToggle(product) {
     await productService.toggleProductStatus(product.id);
     load();
+  }
+
+  function toggleSelected(id) {
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]));
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((ids) => (ids.length === products.length ? [] : products.map((p) => p.id)));
+  }
+
+  async function handleBulkStatus(status) {
+    setBulkBusy(true);
+    try {
+      await productService.bulkUpdateProductStatus(selectedIds, status);
+      toast.success(`${selectedIds.length} product(s) updated`);
+      load();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setBulkBusy(false);
+    }
   }
 
   async function handleDelete() {
@@ -83,6 +107,15 @@ export default function AdminProducts() {
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm">
+          <span className="font-medium text-emerald-800">{selectedIds.length} selected</span>
+          <Button size="sm" loading={bulkBusy} onClick={() => handleBulkStatus(true)}>Activate</Button>
+          <Button size="sm" variant="ghost" loading={bulkBusy} onClick={() => handleBulkStatus(false)}>Deactivate</Button>
+          <button onClick={() => setSelectedIds([])} className="ml-auto text-xs text-slate-500 hover:underline">Clear selection</button>
+        </div>
+      )}
+
       {loading ? (
         <LoadingSpinner />
       ) : products.length === 0 ? (
@@ -92,6 +125,14 @@ export default function AdminProducts() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-500">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === products.length}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </th>
                 <th className="px-4 py-3">Product</th>
                 <th className="px-4 py-3">SKU</th>
                 <th className="px-4 py-3">Category</th>
@@ -104,6 +145,14 @@ export default function AdminProducts() {
             <tbody className="divide-y divide-slate-100">
               {products.map((p) => (
                 <tr key={p.id}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(p.id)}
+                      onChange={() => toggleSelected(p.id)}
+                      aria-label={`Select ${p.name}`}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-slate-100">

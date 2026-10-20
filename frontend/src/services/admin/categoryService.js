@@ -30,3 +30,8 @@ export async function toggleCategoryStatus(id) {
   const { data } = await api.patch(`/admin/categories/${id}/toggle-status`);
   return data.data;
 }
+
+export async function bulkUpdateCategoryStatus(ids, status) {
+  const { data } = await api.post('/admin/categories/bulk-status', { ids, status });
+  return data.data;
+}

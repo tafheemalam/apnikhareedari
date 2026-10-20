@@ -120,6 +120,19 @@ class ProductController extends Controller
         return $this->success(new ProductResource($product), 'Product status updated');
     }
 
+    public function bulkUpdateStatus(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:products,id'],
+            'status' => ['required', 'boolean'],
+        ]);
+
+        $count = Product::whereIn('id', $validated['ids'])->update(['status' => $validated['status']]);
+
+        return $this->success(['updated' => $count], 'Product status updated');
+    }
+
     public function deleteImage(Product $product, ProductImage $image): JsonResponse
     {
         abort_unless($image->product_id === $product->id, 404);

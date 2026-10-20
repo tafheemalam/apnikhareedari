@@ -26,6 +26,8 @@ export default function AdminCategories() {
   const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   // The table view is paginated (15/page), but the "Parent Category" dropdown
   // needs every category regardless of which page is currently showing —
@@ -50,6 +52,7 @@ export default function AdminCategories() {
 
   function load() {
     setLoading(true);
+    setSelectedIds([]);
     categoryService
       .getCategories({ page, search: search || undefined, per_page: 15 })
       .then(setResult)
@@ -115,6 +118,27 @@ export default function AdminCategories() {
     load();
   }
 
+  function toggleSelected(id) {
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]));
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((ids) => (ids.length === categoriesOnPage.length ? [] : categoriesOnPage.map((c) => c.id)));
+  }
+
+  async function handleBulkStatus(status) {
+    setBulkBusy(true);
+    try {
+      await categoryService.bulkUpdateCategoryStatus(selectedIds, status);
+      toast.success(`${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'} updated`);
+      load();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   const categoriesOnPage = result?.data ?? [];
 
   return (
@@ -134,6 +158,15 @@ export default function AdminCategories() {
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm">
+          <span className="font-medium text-emerald-800">{selectedIds.length} selected</span>
+          <Button size="sm" loading={bulkBusy} onClick={() => handleBulkStatus(true)}>Activate</Button>
+          <Button size="sm" variant="ghost" loading={bulkBusy} onClick={() => handleBulkStatus(false)}>Deactivate</Button>
+          <button onClick={() => setSelectedIds([])} className="ml-auto text-xs text-slate-500 hover:underline">Clear selection</button>
+        </div>
+      )}
+
       {loading ? (
         <LoadingSpinner />
       ) : categoriesOnPage.length === 0 ? (
@@ -143,6 +176,14 @@ export default function AdminCategories() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-500">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === categoriesOnPage.length}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Parent</th>
                 <th className="px-4 py-3">Products</th>
@@ -153,6 +194,14 @@ export default function AdminCategories() {
             <tbody className="divide-y divide-slate-100">
               {categoriesOnPage.map((cat) => (
                 <tr key={cat.id}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(cat.id)}
+                      onChange={() => toggleSelected(cat.id)}
+                      aria-label={`Select ${cat.name}`}
+                    />
+                  </td>
                   <td className="px-4 py-3 font-medium text-slate-800">{cat.name}</td>
                   <td className="px-4 py-3 text-slate-500">{cat.parent?.name || '—'}</td>
                   <td className="px-4 py-3 text-slate-500">{cat.products_count}</td>

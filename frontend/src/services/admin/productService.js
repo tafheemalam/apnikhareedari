@@ -31,6 +31,11 @@ export async function toggleProductStatus(id) {
   return data.data;
 }
 
+export async function bulkUpdateProductStatus(ids, status) {
+  const { data } = await api.post('/admin/products/bulk-status', { ids, status });
+  return data.data;
+}
+
 export async function deleteProductImage(productId, imageId) {
   const { data } = await api.delete(`/admin/products/${productId}/images/${imageId}`);
   return data;

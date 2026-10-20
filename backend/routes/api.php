@@ -116,11 +116,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
     Route::middleware('permission:manage-categories')->group(function () {
         Route::apiResource('categories', AdminCategoryController::class);
         Route::patch('categories/{category}/toggle-status', [AdminCategoryController::class, 'toggleStatus']);
+        Route::post('categories/bulk-status', [AdminCategoryController::class, 'bulkUpdateStatus']);
     });
 
     Route::middleware('permission:manage-products')->group(function () {
         Route::apiResource('products', AdminProductController::class);
         Route::patch('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus']);
+        Route::post('products/bulk-status', [AdminProductController::class, 'bulkUpdateStatus']);
         Route::delete('products/{product}/images/{image}', [AdminProductController::class, 'deleteImage']);
         Route::patch('products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage']);
 

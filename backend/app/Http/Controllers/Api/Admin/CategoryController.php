@@ -94,4 +94,17 @@ class CategoryController extends Controller
 
         return $this->success(new CategoryResource($category), 'Category status updated');
     }
+
+    public function bulkUpdateStatus(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:categories,id'],
+            'status' => ['required', 'boolean'],
+        ]);
+
+        $count = Category::whereIn('id', $validated['ids'])->update(['status' => $validated['status']]);
+
+        return $this->success(['updated' => $count], 'Category status updated');
+    }
 }
