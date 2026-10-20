@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Input, Checkbox } from '../../components/ui/FormField';
 
-const EMPTY_VARIATION = { sku: '', price: '', sale_price: '', quantity: '', low_stock_threshold: 5, status: true, image: null };
+const EMPTY_VARIATION = { sku: '', price: '', sale_price: '', quantity: '', low_stock_threshold: 5, status: true, image: null, remove_image: false };
 
 export default function ProductVariationManager({ productId, variations, onChange }) {
   const toast = useToast();
@@ -46,9 +46,14 @@ export default function ProductVariationManager({ productId, variations, onChang
       low_stock_threshold: variation.low_stock_threshold ?? 5,
       status: variation.status,
       image: null,
+      remove_image: false,
     });
     setOptions(variation.options.length ? variation.options : [{ attribute_name: '', attribute_value: '' }]);
     setModalOpen(true);
+  }
+
+  function handleRemoveImage() {
+    setForm((f) => ({ ...f, image: null, remove_image: true }));
   }
 
   function updateOption(index, field, value) {
@@ -182,11 +187,17 @@ export default function ProductVariationManager({ productId, variations, onChang
           )}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Image</label>
-            {editing?.image_url && !form.image && (
+            {editing?.image_url && !form.image && !form.remove_image && (
               <div className="mb-2 flex items-center gap-2">
                 <img src={editing.image_url} alt="" className="h-14 w-14 rounded-lg border border-slate-200 object-cover" />
                 <span className="text-xs text-slate-500">Current image — choose a file below to replace it.</span>
+                <button type="button" onClick={handleRemoveImage} className="text-xs font-semibold text-red-600 hover:underline">
+                  Remove
+                </button>
               </div>
+            )}
+            {form.remove_image && !form.image && (
+              <p className="mb-2 text-xs text-slate-500">Image will be removed on save.</p>
             )}
             {newImagePreview && (
               <div className="mb-2 flex items-center gap-2">
@@ -194,7 +205,12 @@ export default function ProductVariationManager({ productId, variations, onChang
                 <span className="text-xs text-emerald-700">New image selected — will replace the current one on save.</span>
               </div>
             )}
-            <input type="file" accept="image/*" onChange={(e) => setForm((f) => ({ ...f, image: e.target.files[0] }))} className="text-sm" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setForm((f) => ({ ...f, image: e.target.files[0] || null, remove_image: false }))}
+              className="text-sm"
+            />
           </div>
           <Checkbox label="Active" checked={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))} />
 

@@ -25,6 +25,7 @@ class ProductVariationRequest extends FormRequest
             'quantity' => [Rule::requiredIf($isCreate), 'integer', 'min:0'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_image' => ['boolean'],
             'options' => ['required', 'array', 'min:1'],
             'options.*.attribute_name' => ['required', 'string', 'max:100'],
             'options.*.attribute_value' => ['required', 'string', 'max:100'],

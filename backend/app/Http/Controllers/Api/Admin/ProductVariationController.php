@@ -75,7 +75,7 @@ class ProductVariationController extends Controller
         abort_unless($variation->product_id === $product->id, 404);
 
         DB::transaction(function () use ($request, $variation) {
-            $data = $request->safe()->except(['options', 'quantity', 'low_stock_threshold', 'image']);
+            $data = $request->safe()->except(['options', 'quantity', 'low_stock_threshold', 'image', 'remove_image']);
 
             if ($request->has('status')) {
                 $data['status'] = $request->boolean('status');
@@ -84,6 +84,9 @@ class ProductVariationController extends Controller
             if ($request->hasFile('image')) {
                 $this->imageUploadService->delete($variation->image);
                 $data['image'] = $this->imageUploadService->store($request->file('image'), "products/{$variation->product_id}/variations");
+            } elseif ($request->boolean('remove_image')) {
+                $this->imageUploadService->delete($variation->image);
+                $data['image'] = null;
             }
 
             $variation->update($data);
