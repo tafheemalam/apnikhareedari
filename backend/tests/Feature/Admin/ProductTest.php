@@ -288,4 +288,35 @@ class ProductTest extends TestCase
 
         $this->assertSame('MOBI-0002', $second);
     }
+
+    public function test_resubmitting_the_same_image_on_update_does_not_add_a_second_gallery_entry(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $created = $this->actingAs($admin)->post('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Copybook',
+            'sku' => 'COPY-0001',
+            'price' => 500,
+            'stock_quantity' => 10,
+            'status' => true,
+            'images' => [UploadedFile::fake()->image('cover.jpg', 800, 800)],
+        ])->assertCreated()->json('data');
+
+        $this->assertCount(1, $created['images']);
+
+        // Admin re-picks (or accidentally resubmits) the same photo on a later edit.
+        $this->actingAs($admin)->post("/api/admin/products/{$created['id']}?_method=PUT", [
+            'category_id' => $category->id,
+            'name' => 'Copybook',
+            'sku' => 'COPY-0001',
+            'price' => 500,
+            'images' => [UploadedFile::fake()->image('cover.jpg', 800, 800)],
+        ])->assertOk();
+
+        $product = \App\Models\Product::with('images')->find($created['id']);
+        $this->assertCount(1, $product->images);
+    }
 }

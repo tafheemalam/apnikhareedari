@@ -246,6 +246,15 @@ class ProductController extends Controller
         foreach ($request->file('images') as $index => $file) {
             $path = $this->imageUploadService->store($file, "products/{$product->id}");
 
+            // Re-selecting (or accidentally resubmitting) a photo already
+            // attached to this product reuses the same stored file instead of
+            // writing a second copy — but without this check it would still
+            // add a second gallery entry pointing at that same file, which is
+            // the "same image shown twice" bug this guards against.
+            if ($product->images()->where('image', $path)->exists()) {
+                continue;
+            }
+
             ProductImage::create([
                 'product_id' => $product->id,
                 'image' => $path,
