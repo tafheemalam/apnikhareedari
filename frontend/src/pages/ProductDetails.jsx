@@ -47,7 +47,11 @@ export default function ProductDetails() {
       .then((data) => {
         setProduct(data);
         setActiveImage(0);
-        setShowingVideo(false);
+        // A product can be uploaded with only a video and no photos (on the
+        // product itself or any variation) — show that video by default
+        // instead of an empty "No image" placeholder.
+        const hasAnyImage = data.images?.length > 0 || (data.variations ?? []).some((v) => v.image_url);
+        setShowingVideo(!hasAnyImage && !!data.video_url);
         setSelectedOptions({});
         setQuantity(1);
       })
@@ -95,8 +99,7 @@ export default function ProductDetails() {
       .filter((v, i, arr) => arr.findIndex((other) => other.image_url === v.image_url) === i)
       .map((v) => ({ url: v.image_url, variation: v }));
     const rest = base.filter((img) => !variantImages.some((vi) => vi.url === img.url));
-    const combined = [...variantImages, ...rest];
-    return combined.length ? combined : [{ url: null }];
+    return [...variantImages, ...rest];
   }, [product]);
 
   // The gallery image tracks Color only — picking a Size never changes it,
