@@ -22,6 +22,13 @@ export default function ProductCard({ product }) {
             loading="lazy"
             className="h-full w-full object-contain transition-transform group-hover:scale-105"
           />
+        ) : product.video_url ? (
+          <>
+            <video src={product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-80" />
+            <span className="absolute inset-0 flex items-center justify-center text-white">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 drop-shadow"><path d="M8 5v14l11-7z" /></svg>
+            </span>
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-slate-300">No image</div>
         )}
