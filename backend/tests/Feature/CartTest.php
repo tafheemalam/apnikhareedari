@@ -110,4 +110,18 @@ class CartTest extends TestCase
 
         $response->assertOk()->assertJsonPath('data.items.0.product.image_url', $variation['image_url']);
     }
+
+    public function test_cart_falls_back_to_the_products_video_when_it_has_no_photos(): void
+    {
+        $product = $this->createProductWithStock(10, ['video' => 'products/99/video/demo.mp4']);
+
+        $response = $this->withHeaders(['X-Cart-Token' => 'guest-token-7'])->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.items.0.product.image_url', null)
+            ->assertJsonPath('data.items.0.product.video_url', fn ($url) => str_contains($url, 'products/99/video/demo.mp4'));
+    }
 }

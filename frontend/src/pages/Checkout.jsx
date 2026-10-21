@@ -406,13 +406,27 @@ export default function Checkout() {
           <h2 className="mb-4 text-sm font-bold text-slate-900">Order Summary</h2>
           <div className="max-h-48 space-y-2 overflow-y-auto border-b border-slate-100 pb-3 text-sm">
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between text-slate-600">
-                <span className="line-clamp-1">
-                  {item.product.name}
-                  {item.variation && <span className="text-slate-400"> ({item.variation.label})</span>}
-                  {' '}× {item.quantity}
-                </span>
-                <span>{formatCurrency(item.line_total)}</span>
+              <div key={item.id} className="flex items-center justify-between gap-2 text-slate-600">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-slate-100">
+                    {item.product.image_url ? (
+                      <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                    ) : item.product.video_url ? (
+                      <>
+                        <video src={item.product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-80" />
+                        <span className="absolute inset-0 flex items-center justify-center text-white">
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 drop-shadow"><path d="M8 5v14l11-7z" /></svg>
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
+                  <span className="line-clamp-1">
+                    {item.product.name}
+                    {item.variation && <span className="text-slate-400"> ({item.variation.label})</span>}
+                    {' '}× {item.quantity}
+                  </span>
+                </div>
+                <span className="shrink-0">{formatCurrency(item.line_total)}</span>
               </div>
             ))}
             {filledBaskets.map((cb) => (

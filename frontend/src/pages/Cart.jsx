@@ -63,9 +63,16 @@ export default function Cart() {
         <div className="flex-1 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
           {items.map((item) => (
             <div key={item.id} className="flex gap-4 p-4">
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                 {item.product.image_url ? (
                   <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                ) : item.product.video_url ? (
+                  <>
+                    <video src={item.product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-80" />
+                    <span className="absolute inset-0 flex items-center justify-center text-white">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 drop-shadow"><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                  </>
                 ) : null}
               </div>
               <div className="flex flex-1 flex-col">
