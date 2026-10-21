@@ -407,7 +407,11 @@ export default function Checkout() {
           <div className="max-h-48 space-y-2 overflow-y-auto border-b border-slate-100 pb-3 text-sm">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-slate-600">
-                <span className="line-clamp-1">{item.product.name} × {item.quantity}</span>
+                <span className="line-clamp-1">
+                  {item.product.name}
+                  {item.variation && <span className="text-slate-400"> ({item.variation.label})</span>}
+                  {' '}× {item.quantity}
+                </span>
                 <span>{formatCurrency(item.line_total)}</span>
               </div>
             ))}

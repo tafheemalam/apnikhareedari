@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CartTest extends TestCase
@@ -69,5 +72,42 @@ class CartTest extends TestCase
         $response = $this->withHeaders($headers)->deleteJson("/api/cart/items/{$itemId}");
 
         $response->assertOk()->assertJsonCount(0, 'data.items');
+    }
+
+    public function test_cart_shows_the_selected_variations_own_image_not_the_products_default(): void
+    {
+        Storage::fake('public');
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $product = $this->actingAs($admin)->post('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Variant T-Shirt',
+            'sku' => 'TSHIRT-VAR-003',
+            'price' => 2000,
+            'has_variations' => true,
+            'status' => true,
+            'images' => [UploadedFile::fake()->image('default.jpg', 900, 900)],
+        ])->assertCreated()->json('data');
+
+        $variation = $this->actingAs($admin)->post("/api/admin/products/{$product['id']}/variations", [
+            'sku' => 'TSHIRT-VAR-003-RED',
+            'quantity' => 10,
+            'options' => [['attribute_name' => 'Color', 'attribute_value' => 'Red']],
+            // Different dimensions than the product photo above, so the fake
+            // image generator produces genuinely different bytes — otherwise
+            // the dedup feature would (correctly) treat them as one image.
+            'image' => UploadedFile::fake()->image('red.jpg', 700, 700),
+        ])->assertCreated()->json('data');
+
+        $this->assertNotSame($product['images'][0]['url'], $variation['image_url']);
+
+        $response = $this->withHeaders(['X-Cart-Token' => 'guest-token-6'])->postJson('/api/cart/items', [
+            'product_id' => $product['id'],
+            'product_variation_id' => $variation['id'],
+            'quantity' => 1,
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.items.0.product.image_url', $variation['image_url']);
     }
 }

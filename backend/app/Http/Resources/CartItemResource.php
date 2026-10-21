@@ -10,6 +10,9 @@ class CartItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         $image = $this->product->images->firstWhere('is_primary', true) ?? $this->product->images->first();
+        $imageUrl = $this->variation?->image
+            ? asset('storage/'.$this->variation->image)
+            : ($image ? asset('storage/'.$image->image) : null);
 
         return [
             'id' => $this->id,
@@ -18,7 +21,7 @@ class CartItemResource extends JsonResource
                 'name' => $this->product->name,
                 'slug' => $this->product->slug,
                 'sku' => $this->variation?->sku ?? $this->product->sku,
-                'image_url' => $image ? asset('storage/'.$image->image) : null,
+                'image_url' => $imageUrl,
             ],
             'variation' => $this->variation ? [
                 'id' => $this->variation->id,
