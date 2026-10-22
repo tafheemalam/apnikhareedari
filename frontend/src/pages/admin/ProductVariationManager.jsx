@@ -60,6 +60,10 @@ export default function ProductVariationManager({ productId, variations, onChang
     setOptions((current) => current.map((opt, i) => (i === index ? { ...opt, [field]: value } : opt)));
   }
 
+  function removeOption(index) {
+    setOptions((current) => current.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const cleanOptions = options.filter((o) => o.attribute_name && o.attribute_value);
@@ -151,7 +155,7 @@ export default function ProductVariationManager({ productId, variations, onChang
         <form onSubmit={handleSubmit} className="space-y-3">
           <p className="text-xs font-semibold text-slate-500">ATTRIBUTES</p>
           {options.map((opt, i) => (
-            <div key={i} className="flex gap-2">
+            <div key={i} className="flex items-center gap-2">
               <input
                 placeholder="Attribute (e.g. Size)"
                 value={opt.attribute_name}
@@ -164,6 +168,16 @@ export default function ProductVariationManager({ productId, variations, onChang
                 onChange={(e) => updateOption(i, 'attribute_value', e.target.value)}
                 className="w-1/2 rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
+              {options.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeOption(i)}
+                  aria-label="Remove attribute"
+                  className="shrink-0 text-slate-400 hover:text-red-600"
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))}
           <button
