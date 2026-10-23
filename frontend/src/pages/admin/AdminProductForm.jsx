@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import * as productService from '../../services/admin/productService';
 import * as categoryService from '../../services/admin/categoryService';
 import { useToast } from '../../context/ToastContext';
@@ -32,7 +32,6 @@ const EMPTY = {
 export default function AdminProductForm() {
   const { id } = useParams();
   const isEdit = !!id;
-  const navigate = useNavigate();
   const toast = useToast();
 
   const [categories, setCategories] = useState([]);
@@ -48,6 +47,7 @@ export default function AdminProductForm() {
   const [deletingImageId, setDeletingImageId] = useState(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState(null);
   const [generatingSku, setGeneratingSku] = useState(false);
+  const [lastCreated, setLastCreated] = useState(null);
 
   // Revoke the object URLs whenever the selection changes or the page unmounts,
   // otherwise each preview leaks memory for the life of the tab.
@@ -153,13 +153,23 @@ export default function AdminProductForm() {
       } else {
         const created = await productService.createProduct(payload);
         toast.success('Product created successfully');
-        navigate(`/admin/products/${created.id}`);
+        setLastCreated(created);
       }
     } catch (err) {
       toast.error(extractErrorMessage(err));
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleAddAnother() {
+    setForm(EMPTY);
+    setNewImages([]);
+    setNewImagePreviews([]);
+    setNewVideo(null);
+    setRemoveVideo(false);
+    setLastCreated(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function handleDeleteImage(imageId) {
@@ -393,7 +403,24 @@ export default function AdminProductForm() {
           <p className="mt-1 text-xs text-slate-400">One short video (max 20MB) shown alongside the product images.</p>
         </div>
 
-        <Button type="submit" size="lg" loading={saving}>{isEdit ? 'Save Changes' : 'Create Product'}</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" size="lg" loading={saving}>{isEdit ? 'Save Changes' : 'Create Product'}</Button>
+          {!isEdit && (
+            <Button type="button" variant="ghost" size="lg" disabled={!lastCreated} onClick={handleAddAnother}>
+              + Add Another Product
+            </Button>
+          )}
+        </div>
+
+        {lastCreated && (
+          <p className="text-xs text-slate-500">
+            "{lastCreated.name}" was created.{' '}
+            <Link to={`/admin/products/${lastCreated.id}`} className="font-medium text-emerald-700 hover:underline">
+              Edit it
+            </Link>{' '}
+            to add variations or more photos, or click "Add Another Product" to keep going.
+          </p>
+        )}
       </form>
 
       {isEdit && product && (
