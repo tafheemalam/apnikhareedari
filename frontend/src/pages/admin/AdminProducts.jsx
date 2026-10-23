@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as productService from '../../services/admin/productService';
 import * as categoryService from '../../services/admin/categoryService';
@@ -37,15 +37,22 @@ export default function AdminProducts() {
     categoryService.getCategories({ per_page: 100 }).then((data) => setCategories(data.data));
   }, []);
 
-  function handleSearch(e) {
-    e.preventDefault();
-    // setPage(1) is a no-op (and the [page] effect won't refire) when the
-    // admin searches while already on page 1 — load(1) guarantees the new
-    // search term is actually fetched instead of silently reusing whatever
-    // page the listing happened to be on before.
-    setPage(1);
-    load(1);
-  }
+  // Filters the list as the admin types, instead of requiring Enter/submit.
+  // Debounced so it doesn't fire a request on every keystroke, and skipped
+  // on mount since the [page, categoryId] effect above already loads once.
+  const searchMounted = useRef(false);
+  useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setPage(1);
+      load(1);
+    }, 350);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   async function handleToggle(product) {
     await productService.toggleProductStatus(product.id);
@@ -91,14 +98,12 @@ export default function AdminProducts() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-slate-900">Products</h1>
         <div className="flex flex-wrap gap-2">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products..."
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-            />
-          </form>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+          />
           <select
             value={categoryId}
             onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}

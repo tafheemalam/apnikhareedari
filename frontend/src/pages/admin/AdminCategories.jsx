@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as categoryService from '../../services/admin/categoryService';
 import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage } from '../../utils/format';
@@ -61,15 +61,22 @@ export default function AdminCategories() {
 
   useEffect(load, [page]);
 
-  function handleSearch(e) {
-    e.preventDefault();
-    // setPage(1) is a no-op (and the [page] effect won't refire) when the
-    // admin searches while already on page 1 — load(1) guarantees the new
-    // search term is actually fetched instead of silently reusing whatever
-    // page the listing happened to be on before.
-    setPage(1);
-    load(1);
-  }
+  // Filters the list as the admin types, instead of requiring Enter/submit.
+  // Debounced so it doesn't fire a request on every keystroke, and skipped
+  // on mount since the [page] effect above already loads once.
+  const searchMounted = useRef(false);
+  useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setPage(1);
+      load(1);
+    }, 350);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   function openCreate() {
     setEditing(null);
@@ -150,14 +157,12 @@ export default function AdminCategories() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-slate-900">Categories</h1>
         <div className="flex gap-2">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search categories..."
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-            />
-          </form>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search categories..."
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+          />
           <Button size="sm" onClick={openCreate}>+ Add Category</Button>
         </div>
       </div>
