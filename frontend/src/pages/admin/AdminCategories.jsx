@@ -50,11 +50,11 @@ export default function AdminCategories() {
     return () => URL.revokeObjectURL(url);
   }, [form.image]);
 
-  function load() {
+  function load(targetPage = page) {
     setLoading(true);
     setSelectedIds([]);
     categoryService
-      .getCategories({ page, search: search || undefined, per_page: 15 })
+      .getCategories({ page: targetPage, search: search || undefined, per_page: 15 })
       .then(setResult)
       .finally(() => setLoading(false));
   }
@@ -63,8 +63,12 @@ export default function AdminCategories() {
 
   function handleSearch(e) {
     e.preventDefault();
+    // setPage(1) is a no-op (and the [page] effect won't refire) when the
+    // admin searches while already on page 1 — load(1) guarantees the new
+    // search term is actually fetched instead of silently reusing whatever
+    // page the listing happened to be on before.
     setPage(1);
-    load();
+    load(1);
   }
 
   function openCreate() {
