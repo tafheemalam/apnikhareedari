@@ -1,10 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function SearchBar({ className = '' }) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [term, setTerm] = useState(params.get('search') || '');
+
+  // Clearing the box while a search is active used to leave the old results
+  // (and ?search=... in the URL) on screen until Enter was pressed again.
+  // Emptying it now takes you back to the full shop automatically.
+  useEffect(() => {
+    if (term.trim() === '' && params.get('search')) {
+      const timeout = setTimeout(() => navigate('/shop', { replace: true }), 300);
+      return () => clearTimeout(timeout);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [term]);
 
   function handleSubmit(e) {
     e.preventDefault();
