@@ -29,6 +29,7 @@ class CartItemResource extends JsonResource
                 'label' => $this->variation->label,
             ] : null,
             'quantity' => $this->quantity,
+            'note' => $this->note,
             'unit_price' => $this->unit_price,
             'line_total' => $this->line_total,
             'available_stock' => $this->variation?->inventory?->quantity ?? $this->product->inventory?->quantity ?? 0,

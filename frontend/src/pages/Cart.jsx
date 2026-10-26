@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
@@ -10,6 +11,7 @@ export default function Cart() {
   const { cart, items, basketInstances, subtotal, loading, updateItem, removeItem, removeBasketInstance } = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const [noteDrafts, setNoteDrafts] = useState({});
 
   async function handleRemoveBasket(cartBasketId) {
     try {
@@ -23,9 +25,23 @@ export default function Cart() {
   async function handleQuantityChange(itemId, quantity) {
     if (quantity < 1) return;
     try {
-      await updateItem(itemId, quantity);
+      await updateItem(itemId, { quantity });
     } catch (err) {
       toast.error(extractErrorMessage(err, 'Could not update quantity'));
+    }
+  }
+
+  function getNoteDraft(item) {
+    return noteDrafts[item.id] ?? item.note ?? '';
+  }
+
+  async function handleNoteBlur(item) {
+    const value = getNoteDraft(item).trim();
+    if (value === (item.note ?? '')) return;
+    try {
+      await updateItem(item.id, { quantity: item.quantity, note: value });
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Could not save note'));
     }
   }
 
@@ -87,7 +103,16 @@ export default function Cart() {
                     Remove
                   </button>
                 </div>
-                <div className="mt-auto flex items-center justify-between">
+                <input
+                  type="text"
+                  value={getNoteDraft(item)}
+                  onChange={(e) => setNoteDrafts((d) => ({ ...d, [item.id]: e.target.value }))}
+                  onBlur={() => handleNoteBlur(item)}
+                  placeholder="Add a note for this item (optional)"
+                  maxLength={500}
+                  className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                />
+                <div className="mt-auto flex items-center justify-between pt-2">
                   <div className="flex items-center rounded-lg border border-slate-300">
                     <button
                       onClick={() => handleQuantityChange(item.id, item.quantity - 1)}

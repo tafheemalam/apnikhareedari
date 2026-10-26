@@ -424,6 +424,7 @@ export default function Checkout() {
                     {item.product.name}
                     {item.variation && <span className="text-slate-400"> ({item.variation.label})</span>}
                     {' '}× {item.quantity}
+                    {item.note && <span title={item.note}> 📝</span>}
                   </span>
                 </div>
                 <span className="shrink-0">{formatCurrency(item.line_total)}</span>

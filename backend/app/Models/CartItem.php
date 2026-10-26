@@ -12,6 +12,7 @@ class CartItem extends Model
         'product_id',
         'product_variation_id',
         'quantity',
+        'note',
     ];
 
     public function cart(): BelongsTo

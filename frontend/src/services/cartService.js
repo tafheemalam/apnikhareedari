@@ -10,8 +10,10 @@ export async function addToCart(payload) {
   return data.data;
 }
 
-export async function updateCartItem(itemId, quantity) {
-  const { data } = await api.put(`/cart/items/${itemId}`, { quantity });
+export async function updateCartItem(itemId, { quantity, note } = {}) {
+  const payload = { quantity };
+  if (note !== undefined) payload.note = note;
+  const { data } = await api.put(`/cart/items/${itemId}`, payload);
   return data.data;
 }
 

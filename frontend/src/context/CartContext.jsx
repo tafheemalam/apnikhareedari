@@ -32,8 +32,8 @@ export function CartProvider({ children }) {
     return data;
   }, []);
 
-  const updateItem = useCallback(async (itemId, quantity) => {
-    const data = await cartService.updateCartItem(itemId, quantity);
+  const updateItem = useCallback(async (itemId, options) => {
+    const data = await cartService.updateCartItem(itemId, options);
     setCart(data);
     return data;
   }, []);

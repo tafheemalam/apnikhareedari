@@ -70,7 +70,7 @@ class CartService
         $guestCart->delete();
     }
 
-    public function addItem(Cart $cart, Product $product, ?ProductVariation $variation, int $quantity): CartItem
+    public function addItem(Cart $cart, Product $product, ?ProductVariation $variation, int $quantity, ?string $note = null): CartItem
     {
         if (! $this->inventoryService->hasAvailableStock($product, $variation, $quantity)) {
             throw new RuntimeException('Requested quantity is not available in stock.');
@@ -88,7 +88,13 @@ class CartService
         }
 
         if ($item) {
-            $item->update(['quantity' => $newQuantity]);
+            // Adding the same product again (e.g. bumping quantity from the
+            // listing page) shouldn't silently wipe out a note already left
+            // on this line — only overwrite it when a new one is actually given.
+            $item->update(array_filter([
+                'quantity' => $newQuantity,
+                'note' => $note,
+            ], fn ($value, $key) => $key === 'quantity' || $value !== null, ARRAY_FILTER_USE_BOTH));
 
             return $item;
         }
@@ -97,16 +103,17 @@ class CartService
             'product_id' => $product->id,
             'product_variation_id' => $variation?->id,
             'quantity' => $quantity,
+            'note' => $note,
         ]);
     }
 
-    public function updateItemQuantity(CartItem $item, int $quantity): CartItem
+    public function updateItemQuantity(CartItem $item, int $quantity, ?string $note = null, bool $noteProvided = false): CartItem
     {
         if (! $this->inventoryService->hasAvailableStock($item->product, $item->variation, $quantity)) {
             throw new RuntimeException('Requested quantity is not available in stock.');
         }
 
-        $item->update(['quantity' => $quantity]);
+        $item->update($noteProvided ? ['quantity' => $quantity, 'note' => $note] : ['quantity' => $quantity]);
 
         return $item;
     }

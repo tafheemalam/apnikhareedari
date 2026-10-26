@@ -113,6 +113,7 @@ class CheckoutService
                     'price' => $item->unit_price,
                     'quantity' => $item->quantity,
                     'line_total' => $item->line_total,
+                    'note' => $item->note,
                 ]);
 
                 $this->inventoryService->decrease(

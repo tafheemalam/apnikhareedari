@@ -104,6 +104,9 @@ export default function OrderDetails() {
                   )}
                   {item.variation_label && <p className="text-xs text-slate-500">{item.variation_label}</p>}
                   <p className="text-xs text-slate-400">Qty: {item.quantity} × {formatCurrency(item.price)}</p>
+                  {item.note && (
+                    <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">📝 Your note: {item.note}</p>
+                  )}
                 </div>
                 <span className="font-semibold text-slate-900">{formatCurrency(item.line_total)}</span>
               </div>

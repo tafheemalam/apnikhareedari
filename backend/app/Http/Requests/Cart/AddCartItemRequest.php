@@ -17,6 +17,7 @@ class AddCartItemRequest extends FormRequest
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'product_variation_id' => ['nullable', 'integer', 'exists:product_variations,id'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'note' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

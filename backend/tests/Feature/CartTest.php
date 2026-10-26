@@ -124,4 +124,25 @@ class CartTest extends TestCase
             ->assertJsonPath('data.items.0.product.image_url', null)
             ->assertJsonPath('data.items.0.product.video_url', fn ($url) => str_contains($url, 'products/99/video/demo.mp4'));
     }
+
+    public function test_a_note_can_be_added_when_adding_to_cart_and_updated_afterward(): void
+    {
+        $product = $this->createProductWithStock(10);
+        $headers = ['X-Cart-Token' => 'guest-token-8'];
+
+        $this->withHeaders($headers)->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'note' => 'Please gift wrap this one',
+        ])->assertOk()->assertJsonPath('data.items.0.note', 'Please gift wrap this one');
+
+        $itemId = $this->withHeaders($headers)->getJson('/api/cart')->json('data.items.0.id');
+
+        $response = $this->withHeaders($headers)->putJson("/api/cart/items/{$itemId}", [
+            'quantity' => 1,
+            'note' => 'Actually, no wrapping needed',
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.items.0.note', 'Actually, no wrapping needed');
+    }
 }

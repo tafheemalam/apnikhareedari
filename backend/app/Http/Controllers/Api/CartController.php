@@ -43,7 +43,7 @@ class CartController extends Controller
             : null;
 
         try {
-            $this->cartService->addItem($cart, $product, $variation, $request->validated('quantity'));
+            $this->cartService->addItem($cart, $product, $variation, $request->validated('quantity'), $request->validated('note'));
         } catch (RuntimeException $e) {
             return $this->error($e->getMessage(), null, 422);
         }
@@ -58,10 +58,18 @@ class CartController extends Controller
         $cart = $this->resolveCart($request);
         abort_unless($item->cart_id === $cart->id, 404);
 
-        $request->validate(['quantity' => ['required', 'integer', 'min:1']]);
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
 
         try {
-            $this->cartService->updateItemQuantity($item, $request->integer('quantity'));
+            $this->cartService->updateItemQuantity(
+                $item,
+                $validated['quantity'],
+                $validated['note'] ?? null,
+                $request->has('note'),
+            );
         } catch (RuntimeException $e) {
             return $this->error($e->getMessage(), null, 422);
         }

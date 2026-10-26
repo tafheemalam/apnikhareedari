@@ -145,4 +145,21 @@ class CheckoutTest extends TestCase
         $order = Order::first();
         $this->assertEquals(1000, (float) $order->items->first()->price);
     }
+
+    public function test_a_cart_items_note_carries_through_to_the_order(): void
+    {
+        Notification::fake();
+        $customer = User::factory()->create();
+        $product = $this->createProductWithStock(10);
+        $this->actingAs($customer)->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'note' => 'Leave with the security guard',
+        ]);
+
+        $this->actingAs($customer)->postJson('/api/checkout', $this->checkoutPayload());
+
+        $order = Order::first();
+        $this->assertSame('Leave with the security guard', $order->items->first()->note);
+    }
 }

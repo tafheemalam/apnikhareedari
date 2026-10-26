@@ -105,6 +105,9 @@ export default function AdminOrderDetails() {
                       <p className="font-medium text-slate-700">{item.basket_id ? `🧺 ${item.product_name}` : item.product_name}</p>
                       {item.variation_label && <p className="text-xs text-slate-500">{item.variation_label}</p>}
                       <p className="text-xs text-slate-400">SKU: {item.sku} · Qty: {item.quantity} × {formatCurrency(item.price)}</p>
+                      {item.note && (
+                        <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">📝 {item.note}</p>
+                      )}
                     </div>
                     <span className="font-semibold text-slate-900">{formatCurrency(item.line_total)}</span>
                   </div>
