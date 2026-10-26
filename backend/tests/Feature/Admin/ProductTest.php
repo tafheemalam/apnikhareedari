@@ -319,4 +319,30 @@ class ProductTest extends TestCase
         $product = \App\Models\Product::with('images')->find($created['id']);
         $this->assertCount(1, $product->images);
     }
+
+    public function test_creating_a_product_with_a_name_already_in_use_returns_a_clean_validation_error(): void
+    {
+        $admin = $this->createAdmin();
+        $category = Category::factory()->create();
+
+        $this->actingAs($admin)->postJson('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Wiwo Bird Lighting-1 30000mAh Power Bank',
+            'sku' => 'POWE-0001',
+            'price' => 3500,
+            'stock_quantity' => 10,
+            'status' => true,
+        ])->assertCreated();
+
+        $response = $this->actingAs($admin)->postJson('/api/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Wiwo Bird Lighting-1 30000mAh Power Bank',
+            'sku' => 'POWE-0002',
+            'price' => 3500,
+            'stock_quantity' => 10,
+            'status' => true,
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('slug');
+    }
 }
