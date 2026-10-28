@@ -6,6 +6,22 @@ import HeroSlider from '../components/HeroSlider';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useSite } from '../context/SiteContext';
 
+const CATEGORY_ICONS = {
+  'auto-bike': '🚗',
+  'electronics': '🔌',
+  'fashion': '👗',
+  'home': '🏠',
+  'kids-items': '🧸',
+  'kitchen': '🍳',
+  'medical': '💊',
+  'personal-care': '🧴',
+  'personalized-zone': '🎁',
+};
+
+function categoryIcon(cat) {
+  return CATEGORY_ICONS[cat.slug] || '🛍️';
+}
+
 function ProductRow({ title, products, viewAllHref }) {
   if (!products.length) return null;
   return (
@@ -107,7 +123,7 @@ export default function Home() {
                   {cat.image_url ? (
                     <img src={cat.image_url} alt={cat.name} className="h-full w-full rounded-full object-cover" />
                   ) : (
-                    '🛍️'
+                    categoryIcon(cat)
                   )}
                 </div>
                 <span className="text-sm font-medium text-slate-700">{cat.name}</span>
