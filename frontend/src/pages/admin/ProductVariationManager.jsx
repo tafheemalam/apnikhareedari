@@ -18,6 +18,7 @@ export default function ProductVariationManager({ productId, variations, onChang
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState(null);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   useEffect(() => {
     if (!form.image) {
@@ -31,13 +32,36 @@ export default function ProductVariationManager({ productId, variations, onChang
 
   function openCreate() {
     setEditing(null);
+    setIsDuplicate(false);
     setForm(EMPTY_VARIATION);
     setOptions([{ attribute_name: 'Size', attribute_value: '' }, { attribute_name: 'Color', attribute_value: '' }]);
     setModalOpen(true);
   }
 
+  function openDuplicate(variation) {
+    setEditing(null);
+    setIsDuplicate(true);
+    setForm({
+      sku: `${variation.sku}-copy`,
+      price: variation.price ?? '',
+      sale_price: variation.sale_price ?? '',
+      quantity: variation.stock_quantity ?? 0,
+      low_stock_threshold: variation.low_stock_threshold ?? 5,
+      status: variation.status,
+      image: null,
+      remove_image: false,
+    });
+    setOptions(
+      variation.options.length
+        ? variation.options.map((o) => ({ attribute_name: o.attribute_name, attribute_value: o.attribute_value }))
+        : [{ attribute_name: '', attribute_value: '' }]
+    );
+    setModalOpen(true);
+  }
+
   function openEdit(variation) {
     setEditing(variation);
+    setIsDuplicate(false);
     setForm({
       sku: variation.sku,
       price: variation.price ?? '',
@@ -142,6 +166,7 @@ export default function ProductVariationManager({ productId, variations, onChang
                 <td className="py-2">
                   <div className="flex gap-3 text-xs font-medium">
                     <button type="button" onClick={() => openEdit(v)} className="text-emerald-700 hover:underline">Edit</button>
+                    <button type="button" onClick={() => openDuplicate(v)} className="text-slate-600 hover:underline">Duplicate</button>
                     <button type="button" onClick={() => setDeleteTarget(v)} className="text-red-600 hover:underline">Delete</button>
                   </div>
                 </td>
@@ -151,8 +176,13 @@ export default function ProductVariationManager({ productId, variations, onChang
         </table>
       )}
 
-      <Modal open={modalOpen} title={editing ? 'Edit Variation' : 'Add Variation'} onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} title={editing ? 'Edit Variation' : isDuplicate ? 'Duplicate Variation' : 'Add Variation'} onClose={() => setModalOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-3">
+          {isDuplicate && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Copied from an existing variation. Update the SKU and the attribute(s) that differ (e.g. Size or Color), then save.
+            </p>
+          )}
           <p className="text-xs font-semibold text-slate-500">ATTRIBUTES</p>
           {options.map((opt, i) => (
             <div key={i} className="flex items-center gap-2">
