@@ -253,7 +253,11 @@ export default function ProductDetails() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <nav className="mb-4 text-xs text-slate-500">
         <Link to="/" className="hover:text-emerald-700">Home</Link> /{' '}
-        <Link to={`/categories/${product.category.slug}`} className="hover:text-emerald-700">{product.category.name}</Link> /{' '}
+        {product.category.status ? (
+          <Link to={`/categories/${product.category.slug}`} className="hover:text-emerald-700">{product.category.name}</Link>
+        ) : (
+          <span>{product.category.name}</span>
+        )} /{' '}
         <span className="text-slate-700">{product.name}</span>
       </nav>
 

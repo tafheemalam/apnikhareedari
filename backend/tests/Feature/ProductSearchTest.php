@@ -30,6 +30,34 @@ class ProductSearchTest extends TestCase
         $this->assertFalse($names->contains('T-Shirt'));
     }
 
+    public function test_browsing_an_inactive_category_returns_no_products(): void
+    {
+        $category = Category::factory()->create(['slug' => 'laptops', 'status' => false]);
+        $this->createProductWithStock(10, ['name' => 'Ultrabook Pro', 'category_id' => $category->id]);
+
+        $response = $this->getJson('/api/products?category_slug=laptops');
+
+        $response->assertOk();
+        $this->assertCount(0, $response->json('data.data'));
+    }
+
+    public function test_browsing_a_parent_category_excludes_its_inactive_subcategories(): void
+    {
+        $parent = Category::factory()->create(['slug' => 'electronics']);
+        $mobiles = Category::factory()->create(['parent_id' => $parent->id, 'slug' => 'mobiles']);
+        $laptops = Category::factory()->create(['parent_id' => $parent->id, 'slug' => 'laptops', 'status' => false]);
+
+        $this->createProductWithStock(10, ['name' => 'Smartphone X', 'category_id' => $mobiles->id]);
+        $this->createProductWithStock(10, ['name' => 'Ultrabook Pro', 'category_id' => $laptops->id]);
+
+        $response = $this->getJson('/api/products?category_slug=electronics');
+
+        $response->assertOk();
+        $names = collect($response->json('data.data'))->pluck('name');
+        $this->assertTrue($names->contains('Smartphone X'));
+        $this->assertFalse($names->contains('Ultrabook Pro'));
+    }
+
     public function test_products_can_be_searched_by_name(): void
     {
         $this->createProductWithStock(10, ['name' => 'Wireless Bluetooth Earbuds', 'slug' => 'wireless-bluetooth-earbuds']);

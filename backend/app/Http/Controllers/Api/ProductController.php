@@ -24,9 +24,9 @@ class ProductController extends Controller
                 // Products can only be assigned to leaf categories, so a parent category
                 // (e.g. "Electronics") has no products of its own — browsing it should
                 // show everything from its subcategories combined, not an empty page.
-                $category = Category::where('slug', $request->string('category_slug'))->first();
+                $category = Category::where('slug', $request->string('category_slug'))->where('status', true)->first();
                 $categoryIds = $category
-                    ? [$category->id, ...$category->children()->pluck('id')]
+                    ? [$category->id, ...$category->children()->where('status', true)->pluck('id')]
                     : [-1];
 
                 $q->whereIn('category_id', $categoryIds);
