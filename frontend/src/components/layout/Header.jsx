@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useSite } from '../../context/SiteContext';
@@ -12,6 +12,14 @@ export default function Header() {
   const { itemsCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const location = useLocation();
+
+  function isCategoryActive(cat) {
+    return (
+      location.pathname === `/categories/${cat.slug}` ||
+      cat.children?.some((child) => location.pathname === `/categories/${child.slug}`)
+    );
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
@@ -111,24 +119,27 @@ export default function Header() {
           )}
           {categories.map((cat) => (
             <div key={cat.id} className="group relative">
-              <NavLink
+              <Link
                 to={`/categories/${cat.slug}`}
-                className={({ isActive }) => `flex items-center gap-1 py-2 ${isActive ? 'text-emerald-700' : 'hover:text-emerald-700'}`}
+                className={`flex items-center gap-1 py-2 ${isCategoryActive(cat) ? 'font-semibold text-emerald-700' : 'hover:text-emerald-700'}`}
               >
                 {cat.name}
                 {cat.children?.length > 0 && <span className="text-[10px]">▾</span>}
-              </NavLink>
+              </Link>
               {cat.children?.length > 0 && (
                 <div className="invisible absolute left-0 top-full z-50 min-w-48 rounded-lg border border-slate-200 bg-white py-2 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100">
-                  {cat.children.map((child) => (
-                    <Link
-                      key={child.id}
-                      to={`/categories/${child.slug}`}
-                      className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-700"
-                    >
-                      {child.name}
-                    </Link>
-                  ))}
+                  {cat.children.map((child) => {
+                    const childActive = location.pathname === `/categories/${child.slug}`;
+                    return (
+                      <Link
+                        key={child.id}
+                        to={`/categories/${child.slug}`}
+                        className={`block px-4 py-2 text-sm ${childActive ? 'bg-emerald-50 font-semibold text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700'}`}
+                      >
+                        {child.name}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -143,16 +154,28 @@ export default function Header() {
             {hasBasketOption && <Link to="/baskets" onClick={() => setMobileOpen(false)}>🧺 Baskets</Link>}
             {categories.map((cat) => (
               <div key={cat.id}>
-                <Link to={`/categories/${cat.slug}`} onClick={() => setMobileOpen(false)}>
+                <Link
+                  to={`/categories/${cat.slug}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={isCategoryActive(cat) ? 'font-semibold text-emerald-700' : ''}
+                >
                   {cat.name}
                 </Link>
                 {cat.children?.length > 0 && (
                   <div className="ml-3 mt-1 flex flex-col gap-1 border-l border-slate-200 pl-3 text-slate-500">
-                    {cat.children.map((child) => (
-                      <Link key={child.id} to={`/categories/${child.slug}`} onClick={() => setMobileOpen(false)}>
-                        {child.name}
-                      </Link>
-                    ))}
+                    {cat.children.map((child) => {
+                      const childActive = location.pathname === `/categories/${child.slug}`;
+                      return (
+                        <Link
+                          key={child.id}
+                          to={`/categories/${child.slug}`}
+                          onClick={() => setMobileOpen(false)}
+                          className={childActive ? 'font-semibold text-emerald-700' : ''}
+                        >
+                          {child.name}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -8,6 +8,15 @@ import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import { useSite } from '../context/SiteContext';
 
+function findCategoryBySlug(cats, slug) {
+  for (const cat of cats) {
+    if (cat.slug === slug) return cat;
+    const found = cat.children?.length ? findCategoryBySlug(cat.children, slug) : null;
+    if (found) return found;
+  }
+  return null;
+}
+
 const SORT_OPTIONS = [
   { value: '', label: 'Latest' },
   { value: 'price_low_high', label: 'Price: Low to High' },
@@ -30,7 +39,7 @@ export default function ProductListing({ mode = 'shop' }) {
     availability: searchParams.get('availability') || '',
   });
 
-  const activeCategory = categories.find((c) => c.slug === categorySlug);
+  const activeCategory = findCategoryBySlug(categories, categorySlug);
   const page = Number(searchParams.get('page') || 1);
   const sort = searchParams.get('sort') || '';
 
