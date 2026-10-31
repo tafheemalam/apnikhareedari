@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import * as catalogService from '../services/catalogService';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -8,10 +8,11 @@ import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import { useSite } from '../context/SiteContext';
 
-function findCategoryBySlug(cats, slug) {
+function findCategoryPath(cats, slug, trail = []) {
   for (const cat of cats) {
-    if (cat.slug === slug) return cat;
-    const found = cat.children?.length ? findCategoryBySlug(cat.children, slug) : null;
+    const nextTrail = [...trail, cat];
+    if (cat.slug === slug) return nextTrail;
+    const found = cat.children?.length ? findCategoryPath(cat.children, slug, nextTrail) : null;
     if (found) return found;
   }
   return null;
@@ -39,7 +40,8 @@ export default function ProductListing({ mode = 'shop' }) {
     availability: searchParams.get('availability') || '',
   });
 
-  const activeCategory = findCategoryBySlug(categories, categorySlug);
+  const categoryPath = mode === 'category' ? findCategoryPath(categories, categorySlug) || [] : [];
+  const activeCategory = categoryPath[categoryPath.length - 1];
   const page = Number(searchParams.get('page') || 1);
   const sort = searchParams.get('sort') || '';
 
@@ -104,6 +106,23 @@ export default function ProductListing({ mode = 'shop' }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <nav className="mb-3 text-xs text-slate-500">
+        <Link to="/" className="hover:text-emerald-700">Home</Link> /{' '}
+        {mode === 'category' ? (
+          categoryPath.map((cat, i) =>
+            i === categoryPath.length - 1 ? (
+              <span key={cat.id} className="text-slate-700">{cat.name}</span>
+            ) : (
+              <span key={cat.id}>
+                <Link to={`/categories/${cat.slug}`} className="hover:text-emerald-700">{cat.name}</Link> /{' '}
+              </span>
+            )
+          )
+        ) : (
+          <span className="text-slate-700">{heading}</span>
+        )}
+      </nav>
+
       <h1 className="mb-6 text-2xl font-bold text-slate-900">{heading}</h1>
 
       <div className="flex flex-col gap-6 lg:flex-row">
