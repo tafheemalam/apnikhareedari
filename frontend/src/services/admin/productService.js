@@ -66,6 +66,11 @@ export async function updateVariation(productId, variationId, payload) {
   return data.data;
 }
 
+export async function generateVariations(productId, payload) {
+  const { data } = await api.post(`/admin/products/${productId}/variations/generate`, toFormData(payload));
+  return data.data;
+}
+
 export async function deleteVariation(productId, variationId) {
   const { data } = await api.delete(`/admin/products/${productId}/variations/${variationId}`);
   return data;

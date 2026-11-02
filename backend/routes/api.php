@@ -129,6 +129,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
 
         Route::get('products/{product}/variations', [ProductVariationController::class, 'index']);
         Route::post('products/{product}/variations', [ProductVariationController::class, 'store']);
+        Route::post('products/{product}/variations/generate', [ProductVariationController::class, 'generate']);
         Route::put('products/{product}/variations/{variation}', [ProductVariationController::class, 'update']);
         Route::delete('products/{product}/variations/{variation}', [ProductVariationController::class, 'destroy']);
     });

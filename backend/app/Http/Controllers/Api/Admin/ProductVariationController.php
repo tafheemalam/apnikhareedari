@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\GenerateProductVariationsRequest;
 use App\Http\Requests\Admin\ProductVariationRequest;
 use App\Http\Resources\ProductVariationResource;
 use App\Models\Product;
@@ -13,6 +14,7 @@ use App\Services\ImageUploadService;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductVariationController extends Controller
 {
@@ -73,6 +75,126 @@ class ProductVariationController extends Controller
         $variation->load('options', 'inventory');
 
         return $this->success(new ProductVariationResource($variation), 'Variation created successfully', 201);
+    }
+
+    /**
+     * Create every Size x Color combination at once — one image per color,
+     * reused across all of that color's sizes — instead of the admin having
+     * to add each variation (and re-upload the same photo) one at a time.
+     * Combinations that already exist on the product are skipped rather than
+     * duplicated, so this is also safe to re-run after adding a new size/color.
+     */
+    public function generate(GenerateProductVariationsRequest $request, Product $product): JsonResponse
+    {
+        $sizes = collect($request->input('sizes'))
+            ->map(fn ($s) => trim($s))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $colorsInput = $request->input('colors');
+
+        $basePrefix = Str::upper(Str::slug(
+            $request->filled('sku_prefix') ? $request->input('sku_prefix') : $product->sku,
+            '-'
+        ));
+
+        $existingCombos = $product->variations()->with('options')->get()
+            ->map(fn ($v) => $this->comboKey($v->options->pluck('attribute_value', 'attribute_name')->all()))
+            ->all();
+
+        $createdIds = [];
+        $skipped = 0;
+        $usedSkus = [];
+
+        DB::transaction(function () use (
+            $request, $product, $sizes, $colorsInput, $basePrefix,
+            &$existingCombos, &$createdIds, &$skipped, &$usedSkus
+        ) {
+            foreach ($colorsInput as $index => $colorInput) {
+                $colorName = trim($colorInput['name']);
+
+                $imagePath = null;
+                if ($request->hasFile("colors.{$index}.image")) {
+                    $imagePath = $this->imageUploadService->store(
+                        $request->file("colors.{$index}.image"),
+                        "products/{$product->id}/variations",
+                        dedupeScope: "products/{$product->id}",
+                    );
+                }
+
+                foreach ($sizes as $size) {
+                    $combo = $this->comboKey(['Size' => $size, 'Color' => $colorName]);
+                    if (in_array($combo, $existingCombos, true)) {
+                        $skipped++;
+                        continue;
+                    }
+                    $existingCombos[] = $combo;
+
+                    $sku = $this->uniqueSku(
+                        $basePrefix.'-'.Str::upper(Str::slug($colorName, '')).'-'.Str::upper(Str::slug($size, '')),
+                        $usedSkus
+                    );
+
+                    $variation = $product->variations()->create([
+                        'sku' => $sku,
+                        'price' => $request->input('price') ?: null,
+                        'sale_price' => $request->input('sale_price') ?: null,
+                        'image' => $imagePath,
+                        'status' => true,
+                    ]);
+
+                    ProductVariationOption::create(['product_variation_id' => $variation->id, 'attribute_name' => 'Size', 'attribute_value' => $size]);
+                    ProductVariationOption::create(['product_variation_id' => $variation->id, 'attribute_name' => 'Color', 'attribute_value' => $colorName]);
+
+                    $this->inventoryService->initialize(
+                        $product,
+                        $variation,
+                        (int) $request->input('quantity', 0),
+                        (int) $request->input('low_stock_threshold', 5),
+                        $request->user(),
+                    );
+
+                    $createdIds[] = $variation->id;
+                }
+            }
+
+            if (! empty($createdIds) && ! $product->has_variations) {
+                $product->update(['has_variations' => true]);
+            }
+        });
+
+        $variations = ProductVariation::whereIn('id', $createdIds)->with('options', 'inventory')->get();
+
+        return $this->success([
+            'created' => ProductVariationResource::collection($variations),
+            'created_count' => count($createdIds),
+            'skipped_count' => $skipped,
+        ], 'Variations generated successfully', 201);
+    }
+
+    protected function comboKey(array $attributes): string
+    {
+        ksort($attributes);
+
+        return collect($attributes)
+            ->map(fn ($value, $name) => strtolower($name).':'.strtolower(trim($value)))
+            ->implode('|');
+    }
+
+    protected function uniqueSku(string $base, array &$used): string
+    {
+        $sku = $base;
+        $suffix = 2;
+
+        while (in_array($sku, $used, true) || ProductVariation::where('sku', $sku)->exists()) {
+            $sku = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        $used[] = $sku;
+
+        return $sku;
     }
 
     public function update(ProductVariationRequest $request, Product $product, ProductVariation $variation): JsonResponse

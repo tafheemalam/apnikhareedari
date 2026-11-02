@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Input, Checkbox } from '../../components/ui/FormField';
 
 const EMPTY_VARIATION = { sku: '', price: '', sale_price: '', quantity: '', low_stock_threshold: 5, status: true, image: null, remove_image: false };
+const EMPTY_GENERATE_FORM = { sku_prefix: '', price: '', sale_price: '', quantity: 0, low_stock_threshold: 5 };
 
 export default function ProductVariationManager({ productId, variations, onChange }) {
   const toast = useToast();
@@ -19,6 +20,12 @@ export default function ProductVariationManager({ productId, variations, onChang
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState(null);
   const [isDuplicate, setIsDuplicate] = useState(false);
+
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
+  const [sizesText, setSizesText] = useState('');
+  const [colorRows, setColorRows] = useState([{ name: '', image: null }]);
+  const [generateForm, setGenerateForm] = useState(EMPTY_GENERATE_FORM);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!form.image) {
@@ -115,6 +122,61 @@ export default function ProductVariationManager({ productId, variations, onChang
     }
   }
 
+  function openGenerate() {
+    setSizesText('');
+    setColorRows([{ name: '', image: null }]);
+    setGenerateForm(EMPTY_GENERATE_FORM);
+    setGenerateModalOpen(true);
+  }
+
+  function updateColorRow(index, field, value) {
+    setColorRows((rows) => rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
+
+  function removeColorRow(index) {
+    setColorRows((rows) => rows.filter((_, i) => i !== index));
+  }
+
+  async function handleGenerate(e) {
+    e.preventDefault();
+    const sizes = sizesText.split(',').map((s) => s.trim()).filter(Boolean);
+    const colors = colorRows.filter((c) => c.name.trim());
+
+    if (sizes.length === 0) {
+      toast.error('Add at least one size (comma-separated, e.g. S, M, L)');
+      return;
+    }
+    if (colors.length === 0) {
+      toast.error('Add at least one color');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const payload = {
+        sizes,
+        colors: colors.map((c) => (c.image ? { name: c.name.trim(), image: c.image } : { name: c.name.trim() })),
+        sku_prefix: generateForm.sku_prefix || undefined,
+        price: generateForm.price || undefined,
+        sale_price: generateForm.sale_price || undefined,
+        quantity: generateForm.quantity,
+        low_stock_threshold: generateForm.low_stock_threshold,
+      };
+      const result = await productService.generateVariations(productId, payload);
+      toast.success(
+        result.skipped_count > 0
+          ? `${result.created_count} variations created, ${result.skipped_count} already existed and were skipped`
+          : `${result.created_count} variations created`
+      );
+      setGenerateModalOpen(false);
+      onChange();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function handleDelete() {
     try {
       await productService.deleteVariation(productId, deleteTarget.id);
@@ -130,7 +192,10 @@ export default function ProductVariationManager({ productId, variations, onChang
     <div className="rounded-xl border border-slate-200 bg-white p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-900">Variations</h2>
-        <Button type="button" size="sm" onClick={openCreate}>+ Add Variation</Button>
+        <div className="flex gap-2">
+          <Button type="button" size="sm" variant="secondary" onClick={openGenerate}>⚡ Generate from Sizes + Colors</Button>
+          <Button type="button" size="sm" onClick={openCreate}>+ Add Variation</Button>
+        </div>
       </div>
 
       {variations.length === 0 ? (
@@ -259,6 +324,103 @@ export default function ProductVariationManager({ productId, variations, onChang
           <Checkbox label="Active" checked={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))} />
 
           <Button type="submit" loading={saving} className="w-full">{editing ? 'Update Variation' : 'Add Variation'}</Button>
+        </form>
+      </Modal>
+
+      <Modal open={generateModalOpen} title="Generate Variations from Sizes + Colors" onClose={() => setGenerateModalOpen(false)}>
+        <form onSubmit={handleGenerate} className="space-y-3">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+            Creates one variation for every size × color combination. Each color only needs one photo — it's reused
+            across all of that color's sizes. Combinations that already exist are skipped automatically.
+          </p>
+
+          <Input
+            label="Sizes (comma-separated)"
+            placeholder="e.g. S, M, L, XL"
+            required
+            value={sizesText}
+            onChange={(e) => setSizesText(e.target.value)}
+          />
+
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Colors</p>
+            <div className="space-y-2">
+              {colorRows.map((row, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2">
+                  <input
+                    placeholder="Color name (e.g. Red)"
+                    value={row.name}
+                    onChange={(e) => updateColorRow(i, 'name', e.target.value)}
+                    className="w-1/2 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => updateColorRow(i, 'image', e.target.files[0] || null)}
+                    className="w-1/2 text-xs"
+                  />
+                  {colorRows.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeColorRow(i)}
+                      aria-label="Remove color"
+                      className="shrink-0 text-slate-400 hover:text-red-600"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setColorRows((c) => [...c, { name: '', image: null }])}
+              className="mt-2 text-xs font-semibold text-emerald-700 hover:underline"
+            >
+              + Add another color
+            </button>
+          </div>
+
+          <Input
+            label="SKU prefix (optional, defaults to product SKU)"
+            value={generateForm.sku_prefix}
+            onChange={(e) => setGenerateForm((f) => ({ ...f, sku_prefix: e.target.value }))}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Price (leave blank to use product price)"
+              type="number"
+              step="0.01"
+              value={generateForm.price}
+              onChange={(e) => setGenerateForm((f) => ({ ...f, price: e.target.value }))}
+            />
+            <Input
+              label="Sale Price"
+              type="number"
+              step="0.01"
+              value={generateForm.sale_price}
+              onChange={(e) => setGenerateForm((f) => ({ ...f, sale_price: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Initial stock (per variation)"
+              type="number"
+              required
+              value={generateForm.quantity}
+              onChange={(e) => setGenerateForm((f) => ({ ...f, quantity: e.target.value }))}
+            />
+            <Input
+              label="Low Stock Threshold"
+              type="number"
+              value={generateForm.low_stock_threshold}
+              onChange={(e) => setGenerateForm((f) => ({ ...f, low_stock_threshold: e.target.value }))}
+            />
+          </div>
+
+          <Button type="submit" loading={generating} className="w-full">Generate Variations</Button>
         </form>
       </Modal>
 
