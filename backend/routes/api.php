@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Api\SitemapController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // Public storefront catalog & content
+Route::get('sitemap.xml', [SitemapController::class, 'index']);
 Route::get('banners', [BannerController::class, 'index']);
 Route::get('baskets', [BasketController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);

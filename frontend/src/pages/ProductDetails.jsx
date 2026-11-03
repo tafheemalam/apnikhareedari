@@ -14,6 +14,7 @@ import ZoomableImage from '../components/ui/ZoomableImage';
 import Button from '../components/ui/Button';
 import ReviewForm from '../components/ReviewForm';
 import QuestionForm from '../components/QuestionForm';
+import Seo, { SITE_URL } from '../components/common/Seo';
 
 function findColorOption(options) {
   return options.find((opt) => opt.attribute_name.toLowerCase() === 'color' || opt.attribute_name.toLowerCase() === 'colour');
@@ -168,6 +169,36 @@ export default function ProductDetails() {
     : product.stock_quantity;
   const isOutOfStock = stock !== null && stock <= 0;
 
+  const productImages = images.map((img) => img.url).filter(Boolean);
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.short_description || product.description || undefined,
+    image: productImages.length ? productImages : undefined,
+    sku: product.sku,
+    brand: { '@type': 'Brand', name: 'ApniKhareedari' },
+    aggregateRating: product.reviews_count > 0
+      ? { '@type': 'AggregateRating', ratingValue: product.average_rating, reviewCount: product.reviews_count }
+      : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: `${SITE_URL}/products/${product.slug}`,
+      priceCurrency: 'PKR',
+      price: product.current_price,
+      availability: product.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: product.category.name, item: `${SITE_URL}/categories/${product.category.slug}` },
+      { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_URL}/products/${product.slug}` },
+    ],
+  };
+
   async function handleAddToCart() {
     if (!canAddToCart) {
       toast.error('Please select all options first');
@@ -251,6 +282,14 @@ export default function ProductDetails() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <Seo
+        title={product.name}
+        description={product.short_description || product.description}
+        path={`/products/${product.slug}`}
+        image={productImages[0]}
+        type="product"
+        jsonLd={[productJsonLd, breadcrumbJsonLd]}
+      />
       <nav className="mb-4 text-xs text-slate-500">
         <Link to="/" className="hover:text-emerald-700">Home</Link> /{' '}
         {product.category.status ? (

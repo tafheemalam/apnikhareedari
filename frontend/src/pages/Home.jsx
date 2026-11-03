@@ -4,7 +4,10 @@ import * as catalogService from '../services/catalogService';
 import ProductCard from '../components/ProductCard';
 import HeroSlider from '../components/HeroSlider';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Seo, { SITE_URL } from '../components/common/Seo';
 import { useSite } from '../context/SiteContext';
+
+const SOCIAL_KEYS = ['social.facebook', 'social.instagram', 'social.tiktok', 'social.youtube'];
 
 const CATEGORY_ICONS = {
   'auto-bike': '🚗',
@@ -44,10 +47,32 @@ function ProductRow({ title, products, viewAllHref }) {
 }
 
 export default function Home() {
-  const { categories } = useSite();
+  const { categories, settings } = useSite();
   const [state, setState] = useState({ featured: [], newArrivals: [], bestSellers: [], onSale: [], loading: true });
   const [banners, setBanners] = useState([]);
   const [bannersLoaded, setBannersLoaded] = useState(false);
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'OnlineStore',
+      name: 'ApniKhareedari',
+      url: SITE_URL,
+      logo: `${SITE_URL}/android-chrome-512x512.png`,
+      sameAs: SOCIAL_KEYS.map((key) => settings[key]).filter((url) => url && /^https?:\/\//i.test(url)),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'ApniKhareedari',
+      url: SITE_URL,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/search?search={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ];
 
   useEffect(() => {
     async function load() {
@@ -79,6 +104,7 @@ export default function Home() {
 
   return (
     <div>
+      <Seo path="/" jsonLd={jsonLd} />
       {banners.length > 0 ? (
         <div className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
           <HeroSlider banners={banners} />

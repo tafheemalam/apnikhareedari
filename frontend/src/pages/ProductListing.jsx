@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
+import Seo, { SITE_URL } from '../components/common/Seo';
 import { useSite } from '../context/SiteContext';
 
 function findCategoryPath(cats, slug, trail = []) {
@@ -104,8 +105,34 @@ export default function ProductListing({ mode = 'shop' }) {
   const heading =
     mode === 'category' ? activeCategory?.name || 'Category' : mode === 'search' ? `Search: "${searchParams.get('search') || ''}"` : 'Shop';
 
+  const seoTitle = mode === 'category' ? activeCategory?.name : mode === 'search' ? `Search results for "${searchParams.get('search') || ''}"` : 'Shop All Products';
+  const seoDescription =
+    mode === 'category'
+      ? activeCategory?.description || `Shop ${activeCategory?.name || ''} online at ApniKhareedari — Pakistan's trusted online store with Cash on Delivery nationwide.`
+      : mode === 'shop'
+      ? "Browse the full ApniKhareedari catalog — electronics, fashion, home essentials and more, with Cash on Delivery available nationwide."
+      : undefined;
+  const seoPath = mode === 'category' ? `/categories/${categorySlug}` : mode === 'shop' ? '/shop' : undefined;
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+      ...(mode === 'category'
+        ? categoryPath.map((cat, i) => ({
+            '@type': 'ListItem',
+            position: i + 2,
+            name: cat.name,
+            item: `${SITE_URL}/categories/${cat.slug}`,
+          }))
+        : [{ '@type': 'ListItem', position: 2, name: heading, item: seoPath ? SITE_URL + seoPath : undefined }]),
+    ],
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <Seo title={seoTitle} description={seoDescription} path={seoPath} noindex={mode === 'search'} jsonLd={breadcrumbJsonLd} />
       <nav className="mb-3 text-xs text-slate-500">
         <Link to="/" className="hover:text-emerald-700">Home</Link> /{' '}
         {mode === 'category' ? (
