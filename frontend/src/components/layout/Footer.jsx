@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSite } from '../../context/SiteContext';
 import { useToast } from '../../context/ToastContext';
-import logoIcon from '../../assets/logo-icon.png';
+import logoWithSlogan from '../../assets/logo-with-slogan.png';
 
 const BENEFITS = [
   { icon: '🚚', title: 'Fast Delivery', text: 'Nationwide shipping across Pakistan' },
@@ -96,11 +96,7 @@ export default function Footer() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-10 sm:grid-cols-4">
         <div>
-          <div className="mb-3 flex items-center gap-2">
-            <img src={logoIcon} alt="" className="h-6 w-auto" />
-            <h4 className="text-sm font-bold text-slate-900">{settings['store.name']}</h4>
-          </div>
-          <p className="mb-2 text-xs italic text-slate-400">Khareedari to abb yahi se hogi</p>
+          <img src={logoWithSlogan} alt="ApniKhareedari" className="mb-3 h-9 w-auto" />
           <p className="text-xs text-slate-500">{settings['store.address']}</p>
           <p className="mt-2 text-xs text-slate-500">{settings['store.phone']}</p>
           <p className="text-xs text-slate-500">{settings['store.email']}</p>

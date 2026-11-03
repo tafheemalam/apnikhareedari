@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useSite } from '../../context/SiteContext';
 import SearchBar from './SearchBar';
-import logoIcon from '../../assets/logo-icon.png';
+import logoWithSlogan from '../../assets/logo-with-slogan.png';
 
 export default function Header() {
   const { categories, hasBasketOption } = useSite();
@@ -32,15 +32,8 @@ export default function Header() {
           ☰
         </button>
 
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src={logoIcon} alt="" className="h-9 w-auto" />
-          <span className="flex flex-col leading-tight">
-            <span className="text-xl font-extrabold">
-              <span className="text-orange-600">Apni</span>
-              <span className="text-teal-700">Khareedari</span>
-            </span>
-            <span className="hidden text-[10px] font-medium text-slate-500 sm:block">Khareedari to abb yahi se hogi</span>
-          </span>
+        <Link to="/" className="flex shrink-0 items-center">
+          <img src={logoWithSlogan} alt="ApniKhareedari" className="h-10 w-auto sm:h-11" />
         </Link>
 
         <SearchBar className="hidden max-w-xl flex-1 md:flex" />
