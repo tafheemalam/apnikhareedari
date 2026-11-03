@@ -9,6 +9,7 @@ import EmptyState from '../components/ui/EmptyState';
 import Pagination from '../components/ui/Pagination';
 import Button from '../components/ui/Button';
 import BasketProductCard from '../components/BasketProductCard';
+import Seo from '../components/common/Seo';
 
 export default function BasketFill() {
   const { cartBasketId } = useParams();
@@ -60,6 +61,7 @@ export default function BasketFill() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <Seo title="Fill Your Basket" noindex />
       <div className="rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-xl font-bold text-slate-900">🧺 {cartBasket.name}</h1>

@@ -15,6 +15,7 @@ import {
 import { Input, PasswordInput } from '../../components/ui/FormField';
 import PasswordStrength from '../../components/ui/PasswordStrength';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 function CheckYourEmail({ email, loginState }) {
   const toast = useToast();
@@ -110,6 +111,7 @@ export default function Register() {
 
   return (
     <div>
+      <Seo title="Create Account" description="Create a free ApniKhareedari account to track orders, save your wishlist and checkout faster." path="/register" />
       <h1 className="text-xl font-bold text-slate-900">Create your account</h1>
       <p className="mb-6 mt-1 text-sm text-slate-500">
         {isCheckoutRedirect ? 'Create an account and verify your email to continue to checkout.' : ' '}

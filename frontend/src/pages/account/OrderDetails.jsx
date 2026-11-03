@@ -7,6 +7,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Seo from '../../components/common/Seo';
 
 export default function OrderDetails() {
   const { orderNumber } = useParams();
@@ -59,6 +60,7 @@ export default function OrderDetails() {
 
   return (
     <div>
+      <Seo title="Order Details" noindex />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <Link to="/account/orders" className="text-xs text-emerald-700 hover:underline">← Back to orders</Link>

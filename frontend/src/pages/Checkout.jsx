@@ -12,6 +12,7 @@ import { isValidPhone, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/
 import Button from '../components/ui/Button';
 import { Input, Textarea, Checkbox } from '../components/ui/FormField';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Seo from '../components/common/Seo';
 
 const EMPTY_FORM = {
   shipping_full_name: '',
@@ -222,6 +223,7 @@ export default function Checkout() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <Seo title="Checkout" noindex />
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Checkout</h1>
       <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">

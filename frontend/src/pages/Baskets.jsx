@@ -7,6 +7,7 @@ import { formatCurrency, extractErrorMessage } from '../utils/format';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
+import Seo from '../components/common/Seo';
 
 export default function Baskets() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function Baskets() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <Seo title="Pre-Made Baskets" description="Browse ready-made value baskets and bundles at ApniKhareedari — pick one and fill it with your favorite items." path="/baskets" />
       <h1 className="text-2xl font-bold text-slate-900">Fill Your Basket</h1>
       <p className="mt-2 text-sm text-slate-600">
         Pick a basket, then fill it with any products you like — pay just the basket's price, no matter what you choose,

@@ -7,6 +7,7 @@ import { formatCurrency, extractErrorMessage } from '../../utils/format';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function Wishlist() {
   const [items, setItems] = useState(null);
@@ -49,6 +50,7 @@ export default function Wishlist() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Seo title="My Wishlist" noindex />
       {items.map((item) => (
         <div key={item.id} className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3">
           <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">

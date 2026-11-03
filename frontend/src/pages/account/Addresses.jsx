@@ -10,6 +10,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Input } from '../../components/ui/FormField';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Seo from '../../components/common/Seo';
 
 const EMPTY = { label: '', full_name: '', phone: '', address_line: '', city: '', area: '', postal_code: '', is_default: false };
 
@@ -96,6 +97,7 @@ export default function Addresses() {
 
   return (
     <div>
+      <Seo title="My Addresses" noindex />
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={openCreate}>+ Add Address</Button>
       </div>

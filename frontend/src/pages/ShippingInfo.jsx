@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as catalogService from '../services/catalogService';
 import { formatCurrency } from '../utils/format';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Seo from '../components/common/Seo';
 
 export default function ShippingInfo() {
   const [zones, setZones] = useState(null);
@@ -12,6 +13,7 @@ export default function ShippingInfo() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <Seo title="Shipping Information" description="Delivery zones, shipping charges and Cash on Delivery details for ApniKhareedari orders across Pakistan." path="/shipping-info" />
       <h1 className="text-2xl font-bold text-slate-900">Shipping Information</h1>
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-600">
         <p>

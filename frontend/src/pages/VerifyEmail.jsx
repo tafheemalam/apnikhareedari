@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { extractErrorMessage } from '../utils/format';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Seo from '../components/common/Seo';
 
 export default function VerifyEmail() {
   const { id, hash } = useParams();
@@ -37,6 +38,7 @@ export default function VerifyEmail() {
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+      <Seo title="Verify Email" noindex />
       {status === 'verifying' && (
         <>
           <LoadingSpinner />

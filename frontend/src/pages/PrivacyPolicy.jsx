@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
+import Seo from '../components/common/Seo';
 
 const LAST_UPDATED = 'August 31, 2026';
 
@@ -9,6 +10,7 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <Seo title="Privacy Policy" description={`Read ${storeName}'s privacy policy to learn how we collect, use and protect your personal data.`} path="/privacy-policy" />
       <h1 className="text-2xl font-bold text-slate-900">Privacy Policy</h1>
       <p className="mt-1 text-xs text-slate-400">Last updated: {LAST_UPDATED}</p>
 

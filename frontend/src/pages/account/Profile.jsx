@@ -14,6 +14,7 @@ import {
 import { Input, PasswordInput } from '../../components/ui/FormField';
 import PasswordStrength from '../../components/ui/PasswordStrength';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function Profile() {
   const { user, refresh } = useAuth();
@@ -80,6 +81,7 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
+      <Seo title="My Profile" noindex />
       <form onSubmit={handleProfileSubmit} noValidate className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-bold text-slate-900">Profile Information</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

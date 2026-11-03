@@ -1,10 +1,16 @@
 import { useSite } from '../context/SiteContext';
+import Seo from '../components/common/Seo';
 
 export default function AboutUs() {
   const { settings } = useSite();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <Seo
+        title="About Us"
+        description="Learn about ApniKhareedari, Pakistan's trusted online store for electronics, fashion and home essentials with Cash on Delivery nationwide."
+        path="/about"
+      />
       <h1 className="text-2xl font-bold text-slate-900">About {settings['store.name']}</h1>
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-600">
         <p>

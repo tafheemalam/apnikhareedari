@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/format';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Badge from '../components/ui/Badge';
+import Seo from '../components/common/Seo';
 
 export default function OrderConfirmation() {
   const { orderNumber } = useParams();
@@ -50,6 +51,7 @@ export default function OrderConfirmation() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
+      <Seo title="Order Confirmed" noindex />
       <div className="text-5xl">🎉</div>
       <h1 className="mt-4 text-2xl font-bold text-slate-900">Thank you for your order!</h1>
       <p className="mt-2 text-slate-600">

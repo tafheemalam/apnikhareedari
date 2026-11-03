@@ -6,6 +6,7 @@ import { formatCurrency, extractErrorMessage } from '../utils/format';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Seo from '../components/common/Seo';
 
 export default function Cart() {
   const { cart, items, basketInstances, subtotal, loading, updateItem, removeItem, removeBasketInstance } = useCart();
@@ -74,6 +75,7 @@ export default function Cart() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <Seo title="Shopping Cart" noindex />
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Shopping Cart</h1>
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="flex-1 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">

@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage } from '../../utils/format';
 import { Input } from '../../components/ui/FormField';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function ForgotPassword() {
   const toast = useToast();
@@ -37,6 +38,7 @@ export default function ForgotPassword() {
 
   return (
     <div>
+      <Seo title="Forgot Password" noindex />
       <h1 className="mb-2 text-xl font-bold text-slate-900">Forgot Password</h1>
       <p className="mb-6 text-sm text-slate-500">Enter your email and we'll send you a reset link.</p>
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function MyOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,6 +37,7 @@ export default function MyOrders() {
 
   return (
     <div>
+      <Seo title="My Orders" noindex />
       <div className="space-y-3">
         {result.data.map((order) => (
           <Link

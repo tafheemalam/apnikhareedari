@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage } from '../../utils/format';
 import { Input, PasswordInput } from '../../components/ui/FormField';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function Login() {
   const { login } = useAuth();
@@ -32,6 +33,7 @@ export default function Login() {
 
   return (
     <div>
+      <Seo title="Login" description="Login to your ApniKhareedari account to track orders and manage your wishlist." path="/login" />
       <h1 className="text-xl font-bold text-slate-900">Login to your account</h1>
       <p className="mb-6 mt-1 text-sm text-slate-500">
         {isCheckoutRedirect ? "Sign in to continue to checkout — we'll take you right back." : ' '}

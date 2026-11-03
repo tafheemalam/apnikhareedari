@@ -6,6 +6,7 @@ import { Input, Textarea } from '../components/ui/FormField';
 import Button from '../components/ui/Button';
 import * as contactService from '../services/contactService';
 import { extractErrorMessage } from '../utils/format';
+import Seo from '../components/common/Seo';
 
 export default function ContactUs() {
   const { settings } = useSite();
@@ -38,6 +39,7 @@ export default function ContactUs() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <Seo title="Contact Us" description="Get in touch with ApniKhareedari for questions, feedback or order support." path="/contact" />
       <h1 className="text-2xl font-bold text-slate-900">Contact Us</h1>
       <p className="mt-2 text-sm text-slate-600">We'd love to hear from you. Reach out with any questions or feedback.</p>
 

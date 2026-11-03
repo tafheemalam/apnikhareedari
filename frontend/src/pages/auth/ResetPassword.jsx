@@ -7,6 +7,7 @@ import { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from '../../utils/val
 import { PasswordInput } from '../../components/ui/FormField';
 import PasswordStrength from '../../components/ui/PasswordStrength';
 import Button from '../../components/ui/Button';
+import Seo from '../../components/common/Seo';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -47,6 +48,7 @@ export default function ResetPassword() {
 
   return (
     <div>
+      <Seo title="Reset Password" noindex />
       <h1 className="mb-6 text-xl font-bold text-slate-900">Reset Your Password</h1>
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>

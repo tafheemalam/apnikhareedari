@@ -2,6 +2,7 @@ import { useLocation, useParams, Link } from 'react-router-dom';
 import { useSite } from '../context/SiteContext';
 import { formatCurrency } from '../utils/format';
 import Button from '../components/ui/Button';
+import Seo from '../components/common/Seo';
 
 const METHOD_LABELS = {
   jazzcash: 'JazzCash',
@@ -49,6 +50,7 @@ export default function PaymentInstructions() {
 
   return (
     <div className="min-h-screen bg-[#f0ede8] px-4 py-8">
+      <Seo title="Payment Instructions" noindex />
       <div className="mx-auto max-w-md">
         {/* Stepper */}
         <div className="mb-6 flex items-center justify-center gap-2 text-sm">
