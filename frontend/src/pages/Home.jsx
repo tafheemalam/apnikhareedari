@@ -25,6 +25,11 @@ function categoryIcon(cat) {
   return CATEGORY_ICONS[cat.slug] || '🛍️';
 }
 
+function categoryItemCount(cat) {
+  const childCount = (cat.children || []).reduce((sum, child) => sum + (child.products_count || 0), 0);
+  return (cat.products_count || 0) + childCount;
+}
+
 function ProductRow({ title, products, viewAllHref }) {
   if (!products.length) return null;
   return (
@@ -154,7 +159,7 @@ export default function Home() {
                 </div>
                 <span className="mt-3 text-sm font-bold text-slate-900">{cat.name}</span>
                 <span className="mt-0.5 text-xs text-slate-500">
-                  {cat.products_count} {cat.products_count === 1 ? 'item' : 'items'}
+                  {categoryItemCount(cat)} {categoryItemCount(cat) === 1 ? 'item' : 'items'}
                 </span>
               </Link>
             ))}
