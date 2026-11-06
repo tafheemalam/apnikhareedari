@@ -138,21 +138,24 @@ export default function Home() {
       {categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-8">
           <h2 className="mb-4 text-xl font-bold text-slate-900">Shop by Category</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 to={`/categories/${cat.slug}`}
-                className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-center transition-shadow hover:shadow-md"
+                className="flex flex-col items-center rounded-2xl bg-amber-50/70 p-5 text-center transition-shadow hover:shadow-md"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-2xl">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-white text-3xl shadow-sm sm:h-24 sm:w-24">
                   {cat.image_url ? (
-                    <img src={cat.image_url} alt={cat.name} className="h-full w-full rounded-full object-cover" />
+                    <img src={cat.image_url} alt={cat.name} className="h-full w-full object-cover" />
                   ) : (
                     categoryIcon(cat)
                   )}
                 </div>
-                <span className="text-sm font-medium text-slate-700">{cat.name}</span>
+                <span className="mt-3 text-sm font-bold text-slate-900">{cat.name}</span>
+                <span className="mt-0.5 text-xs text-slate-500">
+                  {cat.products_count} {cat.products_count === 1 ? 'item' : 'items'}
+                </span>
               </Link>
             ))}
           </div>
