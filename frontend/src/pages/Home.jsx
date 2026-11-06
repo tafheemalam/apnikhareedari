@@ -150,7 +150,7 @@ export default function Home() {
                 to={`/categories/${cat.slug}`}
                 className="flex flex-col items-center rounded-2xl bg-amber-50/70 p-5 text-center transition-shadow hover:shadow-md"
               >
-                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white text-3xl shadow-sm sm:h-24 sm:w-24">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-white text-3xl shadow-md sm:h-24 sm:w-24">
                   {cat.image_url ? (
                     <img src={cat.image_url} alt={cat.name} className="h-full w-full object-cover" />
                   ) : (
