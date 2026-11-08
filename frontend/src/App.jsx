@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
@@ -5,55 +6,61 @@ import { CartProvider } from './context/CartContext';
 import { SiteProvider } from './context/SiteContext';
 import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute, AdminRoute, GuestRoute } from './components/ProtectedRoute';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 
 import StorefrontLayout from './components/layout/StorefrontLayout';
 import AuthLayout from './components/layout/AuthLayout';
 import AccountLayout from './components/layout/AccountLayout';
 import AdminLayout from './components/layout/AdminLayout';
 
+// Kept eager: these are the pages real shoppers and search-engine crawlers
+// land on directly, so they ship in the main bundle for the fastest first paint.
 import Home from './pages/Home';
 import ProductListing from './pages/ProductListing';
 import ProductDetails from './pages/ProductDetails';
-import Baskets from './pages/Baskets';
-import BasketFill from './pages/BasketFill';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import OrderConfirmation from './pages/OrderConfirmation';
-import PaymentInstructions from './pages/PaymentInstructions';
-import VerifyEmail from './pages/VerifyEmail';
-import ContactUs from './pages/ContactUs';
-import AboutUs from './pages/AboutUs';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-import ShippingInfo from './pages/ShippingInfo';
 import NotFound from './pages/NotFound';
 
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
+// Everything else is lazy-loaded so its code doesn't bloat the bundle every
+// storefront visitor downloads, since it's only reached after an explicit click.
+const Baskets = lazy(() => import('./pages/Baskets'));
+const BasketFill = lazy(() => import('./pages/BasketFill'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const PaymentInstructions = lazy(() => import('./pages/PaymentInstructions'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const ShippingInfo = lazy(() => import('./pages/ShippingInfo'));
 
-import MyOrders from './pages/account/MyOrders';
-import OrderDetails from './pages/account/OrderDetails';
-import Wishlist from './pages/account/Wishlist';
-import Profile from './pages/account/Profile';
-import Addresses from './pages/account/Addresses';
+const Login = lazy(() => import('./pages/auth/Login'));
+const Register = lazy(() => import('./pages/auth/Register'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCategories from './pages/admin/AdminCategories';
-import AdminProducts from './pages/admin/AdminProducts';
-import AdminProductForm from './pages/admin/AdminProductForm';
-import AdminInventory from './pages/admin/AdminInventory';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminOrderDetails from './pages/admin/AdminOrderDetails';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminBaskets from './pages/admin/AdminBaskets';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminQuestions from './pages/admin/AdminQuestions';
-import AdminShipping from './pages/admin/AdminShipping';
-import AdminBanners from './pages/admin/AdminBanners';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminUsers from './pages/admin/AdminUsers';
+const MyOrders = lazy(() => import('./pages/account/MyOrders'));
+const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
+const Wishlist = lazy(() => import('./pages/account/Wishlist'));
+const Profile = lazy(() => import('./pages/account/Profile'));
+const Addresses = lazy(() => import('./pages/account/Addresses'));
+
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
+const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'));
+const AdminInventory = lazy(() => import('./pages/admin/AdminInventory'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminOrderDetails = lazy(() => import('./pages/admin/AdminOrderDetails'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminBaskets = lazy(() => import('./pages/admin/AdminBaskets'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
+const AdminQuestions = lazy(() => import('./pages/admin/AdminQuestions'));
+const AdminShipping = lazy(() => import('./pages/admin/AdminShipping'));
+const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 export default function App() {
   return (
@@ -63,6 +70,7 @@ export default function App() {
         <AuthProvider>
           <SiteProvider>
             <CartProvider>
+              <Suspense fallback={<LoadingSpinner size="lg" className="py-24" />}>
               <Routes>
                 <Route element={<StorefrontLayout />}>
                   <Route index element={<Home />} />
@@ -127,6 +135,7 @@ export default function App() {
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </CartProvider>
           </SiteProvider>
         </AuthProvider>
