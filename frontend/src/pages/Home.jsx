@@ -34,7 +34,7 @@ function ProductRowSkeleton() {
     <section className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-4 h-6 w-40 animate-pulse rounded bg-slate-200" />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="aspect-square w-full animate-pulse bg-slate-100" />
             <div className="flex flex-col gap-2 p-3">
