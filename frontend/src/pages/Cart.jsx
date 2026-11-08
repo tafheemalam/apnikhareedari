@@ -83,7 +83,7 @@ export default function Cart() {
             <div key={item.id} className="flex gap-4 p-4">
               <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                 {item.product.image_url ? (
-                  <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                  <img src={item.product.image_url} alt={item.product.name} loading="lazy" className="h-full w-full object-cover" />
                 ) : item.product.video_url ? (
                   <>
                     <video src={item.product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-80" />

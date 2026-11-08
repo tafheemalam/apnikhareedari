@@ -412,7 +412,7 @@ export default function Checkout() {
                 <div className="flex min-w-0 items-center gap-2">
                   <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-slate-100">
                     {item.product.image_url ? (
-                      <img src={item.product.image_url} alt={item.product.name} className="h-full w-full object-cover" />
+                      <img src={item.product.image_url} alt={item.product.name} loading="lazy" className="h-full w-full object-cover" />
                     ) : item.product.video_url ? (
                       <>
                         <video src={item.product.video_url} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-80" />
