@@ -156,7 +156,14 @@ export default function ProductDetails() {
   }
 
   if (loading) return <LoadingSpinner className="min-h-[50vh]" />;
-  if (error || !product) return <ErrorState message="Product not found." />;
+  if (error || !product) {
+    return (
+      <>
+        <Seo title="Product Not Found" noindex />
+        <ErrorState message="Product not found." />
+      </>
+    );
+  }
 
   const needsVariation = product.has_variations;
   const canAddToCart = needsVariation ? !!selectedVariation : true;
