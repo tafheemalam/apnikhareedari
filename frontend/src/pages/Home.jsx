@@ -66,8 +66,13 @@ function ProductRow({ title, products, viewAllHref, loading }) {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {loading
           ? Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
-          : products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+          : products.map((p, i) => (
+              // Keyed by position (not p.id) to match the skeleton cards' keys,
+              // so React updates the existing grid-slot DOM nodes in place on
+              // the loading->loaded transition instead of destroying and
+              // recreating all 10 at once — the latter was the actual cause
+              // of a large CLS hit even with the skeleton sized correctly.
+              <ProductCard key={i} product={p} />
             ))}
       </div>
     </section>
