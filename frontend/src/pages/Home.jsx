@@ -29,41 +29,46 @@ function categoryItemCount(cat) {
   return (cat.products_count || 0) + childCount;
 }
 
-function ProductRowSkeleton() {
+function ProductCardSkeleton() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-4 h-6 w-40 animate-pulse rounded bg-slate-200" />
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="aspect-square w-full animate-pulse bg-slate-100" />
-            <div className="flex flex-col gap-2 p-3">
-              <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
-              <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100" />
-            </div>
-          </div>
-        ))}
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="aspect-square w-full animate-pulse bg-slate-100" />
+      <div className="flex flex-col gap-2 p-3">
+        <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100" />
       </div>
-    </section>
+    </div>
   );
 }
 
-function ProductRow({ title, products, viewAllHref }) {
-  if (!products.length) return null;
+// Renders the same <section> whether data is still loading or already in,
+// so the browser never has to tear down and recreate this element — only
+// its grid children change, which is what keeps this off the CLS report
+// (a full element swap gets penalized as a layout shift even when the two
+// versions are the same height; morphing one persistent node's children
+// doesn't).
+function ProductRow({ title, products, viewAllHref, loading }) {
+  if (!loading && !products.length) return null;
   return (
     <section className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">{title}</h2>
-        {viewAllHref && (
+        {loading ? (
+          <div className="h-6 w-40 animate-pulse rounded bg-slate-200" />
+        ) : (
+          <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+        )}
+        {!loading && viewAllHref && (
           <Link to={viewAllHref} className="text-sm font-semibold text-emerald-700 hover:underline">
             View all →
           </Link>
         )}
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
+        {loading
+          ? Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
+          : products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
       </div>
     </section>
   );
@@ -185,21 +190,10 @@ export default function Home() {
         </section>
       )}
 
-      {state.loading ? (
-        <>
-          <ProductRowSkeleton />
-          <ProductRowSkeleton />
-          <ProductRowSkeleton />
-          <ProductRowSkeleton />
-        </>
-      ) : (
-        <>
-          <ProductRow title="Featured Products" products={state.featured} viewAllHref="/shop?featured=1" />
-          <ProductRow title="New Arrivals" products={state.newArrivals} viewAllHref="/shop?new_arrival=1" />
-          <ProductRow title="Best Sellers" products={state.bestSellers} viewAllHref="/shop?best_seller=1" />
-          <ProductRow title="On Sale" products={state.onSale} viewAllHref="/shop?on_sale=1" />
-        </>
-      )}
+      <ProductRow title="Featured Products" products={state.featured} viewAllHref="/shop?featured=1" loading={state.loading} />
+      <ProductRow title="New Arrivals" products={state.newArrivals} viewAllHref="/shop?new_arrival=1" loading={state.loading} />
+      <ProductRow title="Best Sellers" products={state.bestSellers} viewAllHref="/shop?best_seller=1" loading={state.loading} />
+      <ProductRow title="On Sale" products={state.onSale} viewAllHref="/shop?on_sale=1" loading={state.loading} />
     </div>
   );
 }
