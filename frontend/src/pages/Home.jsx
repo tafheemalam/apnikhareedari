@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import * as catalogService from '../services/catalogService';
 import ProductCard from '../components/ProductCard';
 import HeroSlider from '../components/HeroSlider';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Seo, { SITE_URL } from '../components/common/Seo';
 import { useSite } from '../context/SiteContext';
 
@@ -28,6 +27,25 @@ function categoryIcon(cat) {
 function categoryItemCount(cat) {
   const childCount = (cat.children || []).reduce((sum, child) => sum + (child.products_count || 0), 0);
   return (cat.products_count || 0) + childCount;
+}
+
+function ProductRowSkeleton() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mb-4 h-6 w-40 animate-pulse rounded bg-slate-200" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="aspect-square w-full animate-pulse bg-slate-100" />
+            <div className="flex flex-col gap-2 p-3">
+              <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+              <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function ProductRow({ title, products, viewAllHref }) {
@@ -168,7 +186,12 @@ export default function Home() {
       )}
 
       {state.loading ? (
-        <LoadingSpinner />
+        <>
+          <ProductRowSkeleton />
+          <ProductRowSkeleton />
+          <ProductRowSkeleton />
+          <ProductRowSkeleton />
+        </>
       ) : (
         <>
           <ProductRow title="Featured Products" products={state.featured} viewAllHref="/shop?featured=1" />

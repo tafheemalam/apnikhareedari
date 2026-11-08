@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 class ImageUploadService
@@ -28,13 +29,13 @@ class ImageUploadService
      */
     public function store(UploadedFile $file, string $directory, int $maxWidth = 1600, ?string $dedupeScope = null): string
     {
-        $mimeMap = [
-            'image/jpeg' => 'jpg',
-            'image/png'  => 'png',
-            'image/webp' => 'webp',
-            'image/gif'  => 'gif',
-        ];
-        $ext = $mimeMap[$file->getMimeType()] ?? 'jpg';
+        // Animated GIFs would lose their animation if re-encoded through the
+        // GD driver, so those are kept as-is. Everything else (JPEG, PNG,
+        // WebP) is re-encoded to WebP — it compresses photos far smaller than
+        // lossless PNG while still supporting transparency for logos, and is
+        // supported by every browser Google cares about for Core Web Vitals.
+        $isGif = $file->getMimeType() === 'image/gif';
+        $ext = $isGif ? 'gif' : 'webp';
 
         $image = $this->manager->decodePath($file->getRealPath());
 
@@ -42,7 +43,7 @@ class ImageUploadService
             $image->scale(width: $maxWidth);
         }
 
-        $encoded = (string) $image->encode();
+        $encoded = (string) ($isGif ? $image->encode() : $image->encode(new WebpEncoder(quality: 82)));
 
         $duplicate = $this->findDuplicate($encoded, $dedupeScope ?? $directory);
         if ($duplicate !== null) {
