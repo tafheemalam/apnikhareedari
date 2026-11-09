@@ -11,6 +11,17 @@
     <meta name="theme-color" content="#047857" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ApniKhareedari — Online Shopping in Pakistan</title>
+
+    <!-- GA4: send_page_view is off because this is a client-routed SPA —
+         src/components/Analytics.jsx fires page_view on every route change
+         instead, otherwise only the first page of a visit would ever be counted. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YSJYQH7VWD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-YSJYQH7VWD', { send_page_view: false });
+    </script>
   </head>
   <body>
     <div id="root"></div>
