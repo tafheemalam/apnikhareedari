@@ -16,10 +16,17 @@ use App\Notifications\PaymentFailureAdminNotification;
 use App\Services\Payments\PaymentGatewayManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class CheckoutService
 {
+    /**
+     * Set only when a brand-new account was just created for a guest order —
+     * the controller uses this to log the browser in as that account.
+     */
+    public ?string $issuedToken = null;
+
     public function __construct(
         protected InventoryService $inventoryService,
         protected ShippingService $shippingService,
@@ -30,7 +37,7 @@ class CheckoutService
     /**
      * @throws RuntimeException on stock, coupon, or payment failure — caller should render a 422.
      */
-    public function process(Cart $cart, array $data, User $user): Order
+    public function process(Cart $cart, array $data, ?User $user): Order
     {
         $cart->loadMissing('items.product', 'items.variation', 'basketInstances.items.product', 'basketInstances.items.variation');
 
@@ -60,6 +67,8 @@ class CheckoutService
         }
 
         $shippingFields = $this->resolveShippingFields($data, $user);
+        $user = $user ?? $this->resolveOrCreateGuestUser($shippingFields);
+
         $subtotal = round(
             (float) $cart->items->sum(fn ($item) => $item->quantity * (float) $item->unit_price)
                 + (float) $filledBaskets->sum(fn ($cartBasket) => (float) $cartBasket->amount),
@@ -228,12 +237,12 @@ class CheckoutService
         }
     }
 
-    protected function resolveShippingFields(array $data, User $user): array
+    protected function resolveShippingFields(array $data, ?User $user): array
     {
         if (! empty($data['address_id'])) {
             $address = Address::findOrFail($data['address_id']);
 
-            if ($address->user_id !== $user->id) {
+            if (! $user || $address->user_id !== $user->id) {
                 throw new RuntimeException('The selected address does not belong to your account.');
             }
 
@@ -260,7 +269,7 @@ class CheckoutService
         return [
             'shipping_full_name' => $data['shipping_full_name'],
             'shipping_phone' => $data['shipping_phone'],
-            'shipping_email' => $data['shipping_email'] ?? $user->email,
+            'shipping_email' => $data['shipping_email'] ?? $user?->email,
             'shipping_address' => $data['shipping_address'],
             'shipping_city' => $data['shipping_city'],
             'shipping_area' => $data['shipping_area'] ?? null,
@@ -275,6 +284,41 @@ class CheckoutService
         ];
     }
 
+    /**
+     * No account was presented at checkout — match an existing customer by
+     * email or phone so repeat guest orders consolidate under one record,
+     * otherwise create a new one. We only auto-login (issue a token) for a
+     * brand-new account: silently logging into a matched existing account
+     * would let anyone see a stranger's order history just by typing in
+     * their phone number.
+     */
+    protected function resolveOrCreateGuestUser(array $shippingFields): User
+    {
+        $phone = $shippingFields['shipping_phone'];
+        $email = $shippingFields['shipping_email'];
+
+        $existing = $email ? User::where('email', $email)->first() : null;
+        $existing ??= User::where('phone', $phone)->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        $newUser = User::create([
+            'name' => $shippingFields['shipping_full_name'],
+            'email' => $email ?: "guest{$digits}@apnikhareedari.pk",
+            'phone' => $phone,
+            'password' => Str::random(40),
+            'is_active' => true,
+        ]);
+
+        $this->issuedToken = $newUser->createToken('checkout-guest')->plainTextToken;
+
+        return $newUser;
+    }
+
     protected function generateOrderNumber(): string
     {
         $date = now()->format('Ymd');
@@ -285,11 +329,13 @@ class CheckoutService
 
     public function sendPlacementNotifications(Order $order): void
     {
-        if ($order->user) {
-            $order->user->notify(new OrderPlacedNotification($order));
-        } elseif ($order->shipping_email) {
-            Notification::route('mail', $order->shipping_email)->notify(new OrderPlacedNotification($order));
-        }
+        // Prefer the email typed at checkout over the account's email — for a
+        // new guest account that's a placeholder address, not a real inbox.
+        $notifiable = $order->shipping_email
+            ? Notification::route('mail', $order->shipping_email)
+            : $order->user;
+
+        $notifiable?->notify(new OrderPlacedNotification($order));
 
         $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['Super Admin', 'Admin', 'Order Manager']))->get();
 

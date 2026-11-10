@@ -27,16 +27,47 @@ class CheckoutTest extends TestCase
         ], $overrides);
     }
 
-    public function test_guest_checkout_is_rejected(): void
+    public function test_guest_checkout_creates_an_account_and_logs_them_in(): void
     {
+        Notification::fake();
         $product = $this->createProductWithStock(10);
         $headers = ['X-Cart-Token' => 'guest-checkout-token'];
 
         $this->withHeaders($headers)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
         $response = $this->withHeaders($headers)->postJson('/api/checkout', $this->checkoutPayload());
 
-        $response->assertStatus(401);
-        $this->assertDatabaseCount('orders', 0);
+        $response->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.payment_method', 'cod');
+        $this->assertNotEmpty($response->json('data.auth_token'));
+
+        $orderNumber = $response->json('data.order_number');
+        $userId = Order::where('order_number', $orderNumber)->value('user_id');
+        $this->assertNotNull($userId);
+
+        $user = User::find($userId);
+        $this->assertSame('Bilal Tariq', $user->name);
+        $this->assertSame('03001234567', $user->phone);
+    }
+
+    public function test_repeat_guest_checkout_with_same_phone_reuses_the_account_without_a_login_token(): void
+    {
+        $product = $this->createProductWithStock(10);
+
+        $this->withHeaders(['X-Cart-Token' => 'first'])->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $first = $this->withHeaders(['X-Cart-Token' => 'first'])->postJson('/api/checkout', $this->checkoutPayload());
+
+        $this->withHeaders(['X-Cart-Token' => 'second'])->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1]);
+        $second = $this->withHeaders(['X-Cart-Token' => 'second'])->postJson('/api/checkout', $this->checkoutPayload());
+
+        $second->assertCreated();
+        $this->assertArrayNotHasKey('auth_token', $second->json('data'));
+
+        $firstUserId = Order::where('order_number', $first->json('data.order_number'))->value('user_id');
+        $secondUserId = Order::where('order_number', $second->json('data.order_number'))->value('user_id');
+
+        $this->assertSame($firstUserId, $secondUserId);
+        $this->assertSame(1, User::count());
     }
 
     public function test_a_logged_in_customer_can_place_a_cod_order_and_stock_is_deducted(): void

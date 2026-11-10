@@ -93,9 +93,9 @@ export default function App() {
                   <Route path="terms" element={<Terms />} />
                   <Route path="shipping-info" element={<ShippingInfo />} />
                   <Route path="return-policy" element={<ReturnPolicy />} />
+                  <Route path="checkout" element={<Checkout />} />
 
                   <Route element={<ProtectedRoute />}>
-                    <Route path="checkout" element={<Checkout />} />
                     <Route path="account" element={<AccountLayout />}>
                       <Route index element={<MyOrders />} />
                       <Route path="orders" element={<MyOrders />} />

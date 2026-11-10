@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import * as addressService from '../services/addressService';
 import * as catalogService from '../services/catalogService';
 import * as orderService from '../services/orderService';
+import { setAuthToken, clearCartToken } from '../services/api';
 import { formatCurrency, extractErrorMessage } from '../utils/format';
 import { isValidPhone, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/validators';
 import Button from '../components/ui/Button';
@@ -36,7 +37,7 @@ const EMPTY_ALT_SHIPPING = {
 
 export default function Checkout() {
   const { cart, items, basketInstances, subtotal, refresh: refreshCart } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, refresh: refreshAuth } = useAuth();
   const { settings } = useSite();
   const toast = useToast();
   const navigate = useNavigate();
@@ -173,6 +174,15 @@ export default function Checkout() {
       }
 
       const order = await orderService.checkout(payload);
+
+      // A first-time guest checkout creates an account behind the scenes so
+      // the order can be tracked — log the browser into it transparently.
+      if (order.auth_token) {
+        setAuthToken(order.auth_token);
+        clearCartToken();
+        await refreshAuth();
+      }
+
       await refreshCart();
 
       if (saveAddress && useNewAddress) {

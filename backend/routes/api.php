@@ -72,6 +72,11 @@ Route::post('shipping/estimate', [ShippingController::class, 'estimate']);
 Route::post('coupons/validate', [CouponController::class, 'validateCoupon'])->middleware('throttle:10,1');
 Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:5,1');
 
+// Checkout works for guests too (no account required) — CheckoutController
+// resolves whichever cart/user is present and creates an account behind the
+// scenes for a new guest so their order history can be tracked.
+Route::post('checkout', [CheckoutController::class, 'store'])->middleware('throttle:20,1');
+
 // Cart works for both guests (X-Cart-Token header) and authenticated users
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'show']);
@@ -88,8 +93,6 @@ Route::prefix('cart')->group(function () {
 
 // Authenticated customer routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('checkout', [CheckoutController::class, 'store'])->middleware(['throttle:20,1', 'verified']);
-
     Route::put('profile', [ProfileController::class, 'update']);
     Route::put('profile/password', [ProfileController::class, 'changePassword']);
 
