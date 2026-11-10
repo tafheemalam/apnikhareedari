@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\MerchantFeedController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingController;
@@ -56,6 +57,7 @@ Route::prefix('auth')->group(function () {
 
 // Public storefront catalog & content
 Route::get('sitemap.xml', [SitemapController::class, 'index']);
+Route::get('merchant-feed.xml', [MerchantFeedController::class, 'index']);
 Route::get('banners', [BannerController::class, 'index']);
 Route::get('baskets', [BasketController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
