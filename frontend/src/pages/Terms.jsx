@@ -44,8 +44,8 @@ export default function Terms() {
           is placed (and, for online payments, once payment clears). We may decline or cancel an order for
           reasons such as stock unavailability, pricing errors, or suspected fraud, in which case we'll contact
           you using the details on your order. Please double-check your order before submitting, as changes
-          after confirmation aren't always possible. Returns and exchanges follow whatever return window and
-          conditions are stated on the product page or communicated by our support team. Orders are for personal
+          after confirmation aren't always possible. Returns, replacements, and refunds are handled under our{' '}
+          <Link to="/return-policy" className="font-medium text-emerald-700 hover:underline">Return &amp; Replacement Policy</Link>. Orders are for personal
           or household use — not for resale.
         </p>
 

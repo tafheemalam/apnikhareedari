@@ -35,6 +35,7 @@ const AboutUs = lazy(() => import('./pages/AboutUs'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const ShippingInfo = lazy(() => import('./pages/ShippingInfo'));
+const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
 
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -91,6 +92,7 @@ export default function App() {
                   <Route path="privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="terms" element={<Terms />} />
                   <Route path="shipping-info" element={<ShippingInfo />} />
+                  <Route path="return-policy" element={<ReturnPolicy />} />
 
                   <Route element={<ProtectedRoute />}>
                     <Route path="checkout" element={<Checkout />} />

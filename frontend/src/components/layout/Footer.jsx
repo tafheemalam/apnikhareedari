@@ -115,6 +115,7 @@ export default function Footer() {
             <li><Link to="/about" className="hover:text-emerald-700">About Us</Link></li>
             <li><Link to="/contact" className="hover:text-emerald-700">Contact Us</Link></li>
             <li><Link to="/shipping-info" className="hover:text-emerald-700">Shipping Information</Link></li>
+            <li><Link to="/return-policy" className="hover:text-emerald-700">Return &amp; Replacement Policy</Link></li>
             <li><Link to="/privacy-policy" className="hover:text-emerald-700">Privacy Policy</Link></li>
             <li><Link to="/terms" className="hover:text-emerald-700">Terms &amp; Conditions</Link></li>
           </ul>
