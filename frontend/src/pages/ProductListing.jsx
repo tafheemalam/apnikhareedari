@@ -150,7 +150,12 @@ export default function ProductListing({ mode = 'shop' }) {
         )}
       </nav>
 
-      <h1 className="mb-6 text-2xl font-bold text-slate-900">{heading}</h1>
+      <h1 className={mode === 'category' && activeCategory?.description ? 'mb-2 text-2xl font-bold text-slate-900' : 'mb-6 text-2xl font-bold text-slate-900'}>
+        {heading}
+      </h1>
+      {mode === 'category' && activeCategory?.description && (
+        <p className="mb-6 max-w-3xl text-sm text-slate-600">{activeCategory.description}</p>
+      )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <aside className="w-full shrink-0 lg:w-64">
