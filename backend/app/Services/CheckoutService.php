@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\GuestAccountCreatedNotification;
 use App\Notifications\NewOrderAdminNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\PaymentFailureAdminNotification;
@@ -304,10 +305,12 @@ class CheckoutService
     /**
      * No account was presented at checkout — match an existing customer by
      * email or phone so repeat guest orders consolidate under one record,
-     * otherwise create a new one. We only auto-login (issue a token) for a
-     * brand-new account: silently logging into a matched existing account
-     * would let anyone see a stranger's order history just by typing in
-     * their phone number.
+     * otherwise create a new one with a real password the customer is emailed,
+     * so they can log back in later for order history and account updates. We
+     * only auto-login (issue a token) and send credentials for a brand-new
+     * account: silently logging into a matched existing account would let
+     * anyone see a stranger's order history just by typing in their phone
+     * number.
      */
     protected function resolveOrCreateGuestUser(array $shippingFields): User
     {
@@ -322,16 +325,24 @@ class CheckoutService
         }
 
         $digits = preg_replace('/\D+/', '', $phone);
+        $password = Str::password(12, symbols: false);
 
         $newUser = User::create([
             'name' => $shippingFields['shipping_full_name'],
             'email' => $email ?: "guest{$digits}@apnikhareedari.pk",
             'phone' => $phone,
-            'password' => Str::random(40),
+            'password' => $password,
             'is_active' => true,
+            'email_verified_at' => $email ? now() : null,
         ]);
 
         $this->issuedToken = $newUser->createToken('checkout-guest')->plainTextToken;
+
+        // Only reachable when a real email was given — checkout requires one for
+        // brand-new guest accounts precisely so these credentials can be delivered.
+        if ($email) {
+            $newUser->notify(new GuestAccountCreatedNotification($email, $password));
+        }
 
         return $newUser;
     }

@@ -100,9 +100,11 @@ class OrderController extends Controller
         $order->update(['payment_status' => $request->validated('payment_status')]);
 
         if (! $wasPaid && $order->payment_status === 'paid') {
-            if ($order->user) {
-                $order->user->notify(new PaymentConfirmedNotification($order));
-            }
+            $notifiable = $order->shipping_email
+                ? Notification::route('mail', $order->shipping_email)
+                : $order->user;
+
+            $notifiable?->notify(new PaymentConfirmedNotification($order));
         }
 
         return $this->success(new OrderResource($order), 'Payment status updated');
@@ -129,10 +131,13 @@ class OrderController extends Controller
 
     protected function notifyStatusChange(Order $order): void
     {
-        if ($order->user) {
-            $order->user->notify(new OrderStatusChangedNotification($order));
-        } elseif ($order->shipping_email) {
-            Notification::route('mail', $order->shipping_email)->notify(new OrderStatusChangedNotification($order));
-        }
+        // Prefer the email typed at checkout over the account's email — for a
+        // guest account created with only a phone number, the account email is
+        // a non-deliverable placeholder.
+        $notifiable = $order->shipping_email
+            ? Notification::route('mail', $order->shipping_email)
+            : $order->user;
+
+        $notifiable?->notify(new OrderStatusChangedNotification($order));
     }
 }

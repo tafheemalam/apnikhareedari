@@ -9,7 +9,7 @@ import * as catalogService from '../services/catalogService';
 import * as orderService from '../services/orderService';
 import { setAuthToken, clearCartToken } from '../services/api';
 import { formatCurrency, extractErrorMessage } from '../utils/format';
-import { isValidPhone, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/validators';
+import { isValidPhone, isValidEmail, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/validators';
 import Button from '../components/ui/Button';
 import { Input, Textarea, Checkbox } from '../components/ui/FormField';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -68,6 +68,11 @@ export default function Checkout() {
     const next = {};
     if (!form.shipping_full_name.trim()) next.shipping_full_name = 'Full name is required.';
     if (!isValidPhone(form.shipping_phone, { required: true })) next.shipping_phone = 'Enter a valid Pakistani mobile number, e.g. 0300 1234567.';
+    if (!isAuthenticated && !isValidEmail(form.shipping_email)) {
+      next.shipping_email = 'A valid email is required so we can send your order details and account access.';
+    } else if (form.shipping_email && !isValidEmail(form.shipping_email)) {
+      next.shipping_email = 'Enter a valid email address.';
+    }
     if (!form.shipping_address.trim()) next.shipping_address = 'Address is required.';
     if (!form.shipping_city.trim()) next.shipping_city = 'City is required.';
 
@@ -295,7 +300,19 @@ export default function Checkout() {
                   value={formatPhoneDisplay(form.shipping_phone)}
                   onChange={(e) => setForm((f) => ({ ...f, shipping_phone: sanitizePhoneDigits(e.target.value) }))}
                 />
-                <Input label="Email" type="email" className="sm:col-span-2" value={form.shipping_email} onChange={(e) => setForm((f) => ({ ...f, shipping_email: e.target.value }))} />
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Email"
+                    type="email"
+                    required={!isAuthenticated}
+                    error={errors.shipping_email}
+                    value={form.shipping_email}
+                    onChange={(e) => setForm((f) => ({ ...f, shipping_email: e.target.value }))}
+                  />
+                  {!isAuthenticated && !errors.shipping_email && (
+                    <p className="mt-1 text-xs text-slate-500">We'll email your order details and account login.</p>
+                  )}
+                </div>
                 <Input
                   label="Address"
                   required
