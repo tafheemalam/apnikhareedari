@@ -27,6 +27,7 @@ class Product extends Model
         'price',
         'sale_price',
         'cost_price',
+        'weight',
         'has_variations',
         'status',
         'featured',
@@ -42,6 +43,7 @@ class Product extends Model
             'price' => 'decimal:2',
             'sale_price' => 'decimal:2',
             'cost_price' => 'decimal:2',
+            'weight' => 'decimal:2',
             'has_variations' => 'boolean',
             'status' => 'boolean',
             'featured' => 'boolean',
@@ -125,6 +127,15 @@ class Product extends Model
     public function getInStockAttribute(): bool
     {
         return $this->stock_quantity > 0;
+    }
+
+    /**
+     * Weight used for shipping cost calculation — falls back to 1kg for
+     * products the admin hasn't weighed yet, rather than charging nothing.
+     */
+    public function getShippingWeightAttribute(): float
+    {
+        return (float) ($this->weight ?? 1.0);
     }
 
     public function scopeActive(Builder $query): Builder

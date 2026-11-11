@@ -101,11 +101,18 @@ export default function Checkout() {
     ? (shipToDifferentAddress ? altShipping.city : form.shipping_city)
     : addresses.find((a) => a.id === selectedAddressId)?.city;
 
+  const cartWeight =
+    items.reduce((sum, item) => sum + item.quantity * (item.product.weight ?? 1), 0) +
+    basketInstances.reduce(
+      (sum, cb) => sum + (cb.items || []).reduce((s, bi) => s + bi.quantity * (bi.product.weight ?? 1), 0),
+      0
+    );
+
   useEffect(() => {
     if (!city || !subtotal) return;
     const discountedSubtotal = coupon ? subtotal - coupon.discount_amount : subtotal;
-    catalogService.estimateShipping(city, discountedSubtotal).then(setShipping).catch(() => {});
-  }, [city, subtotal, coupon]);
+    catalogService.estimateShipping(city, discountedSubtotal, cartWeight).then(setShipping).catch(() => {});
+  }, [city, subtotal, coupon, cartWeight]);
 
   async function handleApplyCoupon() {
     if (!couponCode.trim()) return;

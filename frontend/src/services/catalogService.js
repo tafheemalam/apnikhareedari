@@ -60,8 +60,8 @@ export async function getShippingZones() {
   return data.data;
 }
 
-export async function estimateShipping(city, subtotal) {
-  const { data } = await api.post('/shipping/estimate', { city, subtotal });
+export async function estimateShipping(city, subtotal, weight) {
+  const { data } = await api.post('/shipping/estimate', { city, subtotal, weight });
   return data.data;
 }
 

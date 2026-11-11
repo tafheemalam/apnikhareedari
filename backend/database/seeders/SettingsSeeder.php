@@ -31,6 +31,8 @@ class SettingsSeeder extends Seeder
             'shipping' => [
                 'shipping.default_rate' => '250',
                 'shipping.free_shipping_threshold' => '5000',
+                'shipping.weight_base_rate' => '300',
+                'shipping.weight_increment_rate' => '150',
             ],
             'tax' => [
                 'tax.enabled' => '0',

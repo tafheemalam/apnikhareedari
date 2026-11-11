@@ -14,6 +14,7 @@ use App\Notifications\NewOrderAdminNotification;
 use App\Notifications\OrderPlacedNotification;
 use App\Notifications\PaymentFailureAdminNotification;
 use App\Services\Payments\PaymentGatewayManager;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -88,7 +89,8 @@ class CheckoutService
             $discount = $coupon->calculateDiscount($subtotal);
         }
 
-        $shipping = $this->shippingService->calculate($shippingFields['shipping_city'], $subtotal - $discount);
+        $weight = $this->calculateCartWeight($cart, $filledBaskets);
+        $shipping = $this->shippingService->calculate($shippingFields['shipping_city'], $subtotal - $discount, $weight);
         $tax = Setting::get('tax.enabled', false)
             ? round(($subtotal - $discount) * ((float) Setting::get('tax.percentage', 0) / 100), 2)
             : 0.0;
@@ -235,6 +237,21 @@ class CheckoutService
         if ($result->status === 'paid') {
             $order->update(['payment_status' => 'paid', 'status' => 'confirmed']);
         }
+    }
+
+    /**
+     * Computed server-side from the cart, never trusting a client-supplied
+     * weight, since this directly determines what the customer is charged.
+     */
+    protected function calculateCartWeight(Cart $cart, Collection $filledBaskets): float
+    {
+        $weight = (float) $cart->items->sum(fn ($item) => $item->quantity * $item->product->shipping_weight);
+
+        $weight += (float) $filledBaskets->sum(
+            fn ($cartBasket) => $cartBasket->items->sum(fn ($basketItem) => $basketItem->quantity * $basketItem->product->shipping_weight)
+        );
+
+        return $weight;
     }
 
     protected function resolveShippingFields(array $data, ?User $user): array

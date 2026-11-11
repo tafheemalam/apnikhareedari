@@ -7,7 +7,11 @@ use App\Models\ShippingZone;
 
 class ShippingService
 {
-    public function calculate(string $city, float $subtotal): array
+    /**
+     * Shipping cost is weight-based and the same nationwide — zones are only
+     * used here for the free-shipping threshold and the delivery time estimate.
+     */
+    public function calculate(string $city, float $subtotal, float $weightKg = 1.0): array
     {
         $zone = ShippingZone::active()
             ->where('name', 'like', trim($city))
@@ -21,12 +25,11 @@ class ShippingService
         $rate = $zone?->rates?->first();
 
         if (! $rate) {
-            $defaultRate = (float) Setting::get('shipping.default_rate', 250);
             $freeThreshold = (float) Setting::get('shipping.free_shipping_threshold', 5000);
 
             return [
                 'zone' => $zone?->name ?? 'Standard',
-                'amount' => $subtotal >= $freeThreshold ? 0.0 : $defaultRate,
+                'amount' => $subtotal >= $freeThreshold ? 0.0 : $this->weightBasedRate($weightKg),
                 'estimated_days' => null,
             ];
         }
@@ -35,10 +38,19 @@ class ShippingService
 
         return [
             'zone' => $zone->name,
-            'amount' => $isFree ? 0.0 : (float) $rate->rate,
+            'amount' => $isFree ? 0.0 : $this->weightBasedRate($weightKg),
             'estimated_days' => $rate->estimated_delivery_days_min
                 ? "{$rate->estimated_delivery_days_min}-{$rate->estimated_delivery_days_max} days"
                 : null,
         ];
+    }
+
+    public function weightBasedRate(float $weightKg): float
+    {
+        $baseRate = (float) Setting::get('shipping.weight_base_rate', 300);
+        $incrementRate = (float) Setting::get('shipping.weight_increment_rate', 150);
+        $billableKg = max(1, (int) ceil($weightKg));
+
+        return $baseRate + $incrementRate * ($billableKg - 1);
     }
 }

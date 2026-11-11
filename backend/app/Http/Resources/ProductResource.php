@@ -23,6 +23,7 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'sale_price' => $this->sale_price,
             'cost_price' => $this->when($request->routeIs('admin.*'), $this->cost_price),
+            'weight' => $this->when($request->routeIs('admin.*'), $this->weight),
             'current_price' => $this->current_price,
             'is_on_sale' => $this->is_on_sale,
             'has_variations' => (bool) $this->has_variations,

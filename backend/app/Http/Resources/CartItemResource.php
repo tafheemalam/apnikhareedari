@@ -23,6 +23,7 @@ class CartItemResource extends JsonResource
                 'sku' => $this->variation?->sku ?? $this->product->sku,
                 'image_url' => $imageUrl,
                 'video_url' => $imageUrl ? null : ($this->product->video ? asset('storage/'.$this->product->video) : null),
+                'weight' => $this->product->shipping_weight,
             ],
             'variation' => $this->variation ? [
                 'id' => $this->variation->id,

@@ -19,6 +19,7 @@ const EMPTY = {
   price: '',
   sale_price: '',
   cost_price: '',
+  weight: '',
   has_variations: false,
   status: true,
   featured: false,
@@ -119,6 +120,7 @@ export default function AdminProductForm() {
         price: data.price,
         sale_price: data.sale_price || '',
         cost_price: data.cost_price || '',
+        weight: data.weight || '',
         has_variations: data.has_variations,
         status: data.status,
         featured: data.featured,
@@ -250,6 +252,7 @@ export default function AdminProductForm() {
             <Input label="Price" type="number" step="0.01" required value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} />
             <Input label="Sale Price" type="number" step="0.01" value={form.sale_price} onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))} />
             <Input label="Cost Price" type="number" step="0.01" value={form.cost_price} onChange={(e) => setForm((f) => ({ ...f, cost_price: e.target.value }))} />
+            <Input label="Weight (kg, for shipping)" type="number" step="0.01" min="0" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
           </div>
         </div>
 

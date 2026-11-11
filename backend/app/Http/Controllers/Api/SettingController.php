@@ -19,6 +19,7 @@ class SettingController extends Controller
         'payment.jazzcash_enabled', 'payment.easypaisa_enabled',
         'payment.mobile_payment_number', 'payment.account_title', 'payment.whatsapp_number',
         'shipping.default_rate', 'shipping.free_shipping_threshold',
+        'shipping.weight_base_rate', 'shipping.weight_increment_rate',
         'tax.enabled', 'tax.percentage',
         'social.facebook', 'social.instagram', 'social.tiktok', 'social.youtube',
     ];

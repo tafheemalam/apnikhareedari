@@ -53,6 +53,7 @@ class ProductRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
             'has_variations' => ['boolean'],
             'status' => ['boolean'],
             'featured' => ['boolean'],

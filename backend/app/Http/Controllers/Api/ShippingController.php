@@ -23,8 +23,13 @@ class ShippingController extends Controller
         $request->validate([
             'city' => ['required', 'string'],
             'subtotal' => ['required', 'numeric', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        return $this->success($shippingService->calculate($request->string('city'), (float) $request->input('subtotal')));
+        return $this->success($shippingService->calculate(
+            $request->string('city'),
+            (float) $request->input('subtotal'),
+            (float) $request->input('weight', 1.0)
+        ));
     }
 }
