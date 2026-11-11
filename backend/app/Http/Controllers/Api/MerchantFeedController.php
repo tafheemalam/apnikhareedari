@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Cache;
 
 class MerchantFeedController extends Controller
 {
+    // Products in this category are made/engraved to order and aren't eligible for
+    // the standard return policy; they're tagged with a separate return_label in
+    // the feed so a non-returnable policy can be assigned to them in Merchant Center.
+    private const NON_RETURNABLE_CATEGORY_SLUG = 'personalized-items';
+    private const NON_RETURNABLE_RETURN_LABEL = 'no-returns-personalized';
+
     public function index(): Response
     {
         $xml = Cache::remember('merchant-feed.xml', 3600, fn () => $this->buildXml());
@@ -21,7 +27,7 @@ class MerchantFeedController extends Controller
         $base = rtrim(config('app.frontend_url'), '/');
 
         $products = Product::active()
-            ->with(['images' => fn ($q) => $q->orderByDesc('is_primary')])
+            ->with(['images' => fn ($q) => $q->orderByDesc('is_primary'), 'category'])
             ->get();
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
@@ -57,6 +63,9 @@ class MerchantFeedController extends Controller
             $xml .= '    <g:condition>new</g:condition>'."\n";
             $xml .= '    <g:identifier_exists>no</g:identifier_exists>'."\n";
             $xml .= '    <g:brand>ApniKhareedari</g:brand>'."\n";
+            if ($product->category?->slug === self::NON_RETURNABLE_CATEGORY_SLUG) {
+                $xml .= '    <g:return_label>'.self::NON_RETURNABLE_RETURN_LABEL.'</g:return_label>'."\n";
+            }
             $xml .= '  </item>'."\n";
         }
 
