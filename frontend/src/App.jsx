@@ -36,6 +36,8 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const ShippingInfo = lazy(() => import('./pages/ShippingInfo'));
 const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -61,6 +63,8 @@ const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
 const AdminQuestions = lazy(() => import('./pages/admin/AdminQuestions'));
 const AdminShipping = lazy(() => import('./pages/admin/AdminShipping'));
 const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminBlog = lazy(() => import('./pages/admin/AdminBlog'));
+const AdminBlogForm = lazy(() => import('./pages/admin/AdminBlogForm'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
@@ -93,6 +97,8 @@ export default function App() {
                   <Route path="terms" element={<Terms />} />
                   <Route path="shipping-info" element={<ShippingInfo />} />
                   <Route path="return-policy" element={<ReturnPolicy />} />
+                  <Route path="blog" element={<Blog />} />
+                  <Route path="blog/:slug" element={<BlogPost />} />
                   <Route path="checkout" element={<Checkout />} />
 
                   <Route element={<ProtectedRoute />}>
@@ -132,6 +138,9 @@ export default function App() {
                     <Route path="questions" element={<AdminQuestions />} />
                     <Route path="shipping" element={<AdminShipping />} />
                     <Route path="banners" element={<AdminBanners />} />
+                    <Route path="blog" element={<AdminBlog />} />
+                    <Route path="blog/new" element={<AdminBlogForm />} />
+                    <Route path="blog/:id" element={<AdminBlogForm />} />
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="users" element={<AdminUsers />} />
                   </Route>

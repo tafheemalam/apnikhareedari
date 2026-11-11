@@ -20,6 +20,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'manage-questions',
         'manage-settings',
         'manage-admins',
+        'manage-blog',
     ];
 
     public const ROLE_PERMISSIONS = [
@@ -27,6 +28,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'Admin' => [
             'view-dashboard', 'manage-categories', 'manage-products', 'manage-inventory',
             'manage-orders', 'manage-coupons', 'manage-baskets', 'manage-reviews', 'manage-questions', 'manage-settings',
+            'manage-blog',
         ],
         'Inventory Manager' => ['view-dashboard', 'manage-inventory'],
         'Order Manager' => ['view-dashboard', 'manage-orders'],

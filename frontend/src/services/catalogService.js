@@ -55,6 +55,16 @@ export async function getPublicSettings() {
   return data.data;
 }
 
+export async function getBlogPosts(params = {}) {
+  const { data } = await api.get('/blog', { params });
+  return data.data;
+}
+
+export async function getBlogPost(slug) {
+  const { data } = await api.get(`/blog/${slug}`);
+  return data.data;
+}
+
 export async function getShippingZones() {
   const { data } = await api.get('/shipping/zones');
   return data.data;

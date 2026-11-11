@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\Admin\BasketController as AdminBasketController;
+use App\Http\Controllers\Api\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Api\Admin\DashboardController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\ProfileController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BasketController;
+use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\CartBasketController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
@@ -62,6 +64,8 @@ Route::get('banners', [BannerController::class, 'index']);
 Route::get('baskets', [BasketController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::get('categories/{category:slug}', [CategoryController::class, 'show']);
+Route::get('blog', [BlogPostController::class, 'index']);
+Route::get('blog/{post:slug}', [BlogPostController::class, 'show']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{product:slug}', [ProductController::class, 'show']);
 Route::get('products/{product}/reviews', [ReviewController::class, 'index']);
@@ -195,6 +199,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum'])->group(func
 
         Route::apiResource('banners', AdminBannerController::class)->except(['show']);
         Route::patch('banners/{banner}/toggle-status', [AdminBannerController::class, 'toggleStatus']);
+    });
+
+    Route::middleware('permission:manage-blog')->group(function () {
+        Route::apiResource('blog-posts', AdminBlogPostController::class);
+        Route::patch('blog-posts/{blog_post}/toggle-status', [AdminBlogPostController::class, 'toggleStatus']);
     });
 
     Route::middleware('permission:manage-admins')->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Response;
@@ -24,7 +25,17 @@ class SitemapController extends Controller
         $urls = collect([
             ['loc' => $base.'/', 'changefreq' => 'daily', 'priority' => '1.0'],
             ['loc' => $base.'/shop', 'changefreq' => 'daily', 'priority' => '0.9'],
+            ['loc' => $base.'/blog', 'changefreq' => 'weekly', 'priority' => '0.6'],
         ]);
+
+        $urls = $urls->merge(
+            BlogPost::published()->get(['slug', 'updated_at'])->map(fn ($post) => [
+                'loc' => $base.'/blog/'.$post->slug,
+                'lastmod' => $post->updated_at?->toAtomString(),
+                'changefreq' => 'monthly',
+                'priority' => '0.6',
+            ])
+        );
 
         $urls = $urls->merge(
             Category::active()->get(['slug', 'updated_at'])->map(fn ($category) => [

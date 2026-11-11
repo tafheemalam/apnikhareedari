@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/admin/questions', label: 'Q&A', icon: '❓', permission: 'manage-questions' },
   { to: '/admin/shipping', label: 'Shipping', icon: '🚚', permission: 'manage-settings' },
   { to: '/admin/banners', label: 'Banners', icon: '🖼️', permission: 'manage-settings' },
+  { to: '/admin/blog', label: 'Blog', icon: '📝', permission: 'manage-blog' },
   { to: '/admin/settings', label: 'Settings', icon: '⚙️', permission: 'manage-settings' },
   { to: '/admin/users', label: 'Admin Users', icon: '👤', permission: 'manage-admins' },
 ];

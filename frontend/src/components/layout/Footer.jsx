@@ -113,6 +113,7 @@ export default function Footer() {
           <h4 className="mb-3 text-sm font-bold text-slate-900">Company</h4>
           <ul className="space-y-2 text-xs text-slate-500">
             <li><Link to="/about" className="hover:text-emerald-700">About Us</Link></li>
+            <li><Link to="/blog" className="hover:text-emerald-700">Blog</Link></li>
             <li><Link to="/contact" className="hover:text-emerald-700">Contact Us</Link></li>
             <li><Link to="/shipping-info" className="hover:text-emerald-700">Shipping Information</Link></li>
             <li><Link to="/return-policy" className="hover:text-emerald-700">Return &amp; Replacement Policy</Link></li>
