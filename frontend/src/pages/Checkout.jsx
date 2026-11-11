@@ -11,7 +11,7 @@ import { setAuthToken, clearCartToken } from '../services/api';
 import { formatCurrency, extractErrorMessage } from '../utils/format';
 import { isValidPhone, isValidEmail, sanitizePhoneDigits, formatPhoneDisplay } from '../utils/validators';
 import Button from '../components/ui/Button';
-import { Input, Textarea, Checkbox } from '../components/ui/FormField';
+import { Input, PasswordInput, Textarea, Checkbox } from '../components/ui/FormField';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Seo from '../components/common/Seo';
 
@@ -37,7 +37,7 @@ const EMPTY_ALT_SHIPPING = {
 
 export default function Checkout() {
   const { cart, items, basketInstances, subtotal, refresh: refreshCart } = useCart();
-  const { isAuthenticated, user, refresh: refreshAuth } = useAuth();
+  const { isAuthenticated, user, login, refresh: refreshAuth } = useAuth();
   const { settings } = useSite();
   const toast = useToast();
   const navigate = useNavigate();
@@ -61,6 +61,10 @@ export default function Checkout() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [shipToDifferentAddress, setShipToDifferentAddress] = useState(false);
   const [altShipping, setAltShipping] = useState(EMPTY_ALT_SHIPPING);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [loginError, setLoginError] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
 
   function validate() {
     if (!useNewAddress) return true;
@@ -101,6 +105,34 @@ export default function Checkout() {
       });
     }
   }, [isAuthenticated]);
+
+  // Fills in account details after logging in mid-checkout, without overwriting
+  // anything the customer already typed as a guest.
+  useEffect(() => {
+    if (!user) return;
+    setForm((f) => ({
+      ...f,
+      shipping_full_name: f.shipping_full_name || user.name || '',
+      shipping_email: f.shipping_email || user.email || '',
+      shipping_phone: f.shipping_phone || sanitizePhoneDigits(user.phone || ''),
+    }));
+  }, [user]);
+
+  async function handleInlineLogin(e) {
+    e.preventDefault();
+    setLoginError('');
+    setLoggingIn(true);
+    try {
+      await login(loginForm);
+      await refreshCart();
+      setShowLogin(false);
+      toast.success('Logged in successfully');
+    } catch (err) {
+      setLoginError(extractErrorMessage(err, 'Invalid email or password'));
+    } finally {
+      setLoggingIn(false);
+    }
+  }
 
   const city = useNewAddress
     ? (shipToDifferentAddress ? altShipping.city : form.shipping_city)
@@ -253,6 +285,47 @@ export default function Checkout() {
             <h2 className="mb-4 text-sm font-bold text-slate-900">
               {useNewAddress && shipToDifferentAddress ? 'Billing Address' : 'Delivery Address'}
             </h2>
+
+            {!isAuthenticated && (
+              <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                {!showLogin ? (
+                  <p className="text-sm text-slate-600">
+                    Already have an account?{' '}
+                    <button type="button" className="font-medium text-emerald-700 hover:underline" onClick={() => setShowLogin(true)}>
+                      Log in
+                    </button>{' '}
+                    to use your saved address, or continue below as a guest.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-slate-900">Log In</h3>
+                      <button type="button" className="text-xs text-slate-500 hover:underline" onClick={() => setShowLogin(false)}>
+                        Continue as guest instead
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={loginForm.email}
+                        onChange={(e) => setLoginForm((f) => ({ ...f, email: e.target.value }))}
+                      />
+                      <PasswordInput
+                        label="Password"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
+                      />
+                    </div>
+                    {loginError && <p className="text-xs text-red-600">{loginError}</p>}
+                    <div className="flex items-center gap-3">
+                      <Button type="button" size="sm" loading={loggingIn} onClick={handleInlineLogin}>Log In</Button>
+                      <Link to="/forgot-password" className="text-xs text-slate-500 hover:underline">Forgot password?</Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {isAuthenticated && addresses.length > 0 && (
               <div className="mb-4 space-y-2">
