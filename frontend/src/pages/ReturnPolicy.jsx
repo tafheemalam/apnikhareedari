@@ -13,8 +13,8 @@ export default function ReturnPolicy() {
 
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-600">
         <p>
-          If an item arrives damaged, defective, or different from what you ordered, let us know and we'll work
-          with you to make it right.
+          Whether an item arrived damaged or defective, or you simply want to return or exchange something you
+          no longer need, let us know and we'll work with you to make it right.
         </p>
 
         <h2 className="pt-2 text-base font-bold text-slate-900">Photo &amp; Video Proof Required</h2>
@@ -25,8 +25,16 @@ export default function ReturnPolicy() {
 
         <h2 className="pt-2 text-base font-bold text-slate-900">How We Decide</h2>
         <p>
-          Every return or replacement request is reviewed individually, and the outcome — replacement, return, or
-          refund — is decided on a case-by-case basis.
+          We accept return and replacement requests for both defective/damaged items and non-defective items
+          (for example, if you simply changed your mind or no longer need the product). Every request is reviewed
+          individually, and the outcome — replacement, return, or refund — is decided on a case-by-case basis.
+        </p>
+
+        <h2 className="pt-2 text-base font-bold text-slate-900">Exceptions</h2>
+        <p>
+          Personalized and made-to-order items (such as custom-engraved or name-printed products) are made
+          specifically for you and are not eligible for return or replacement unless they arrive damaged or
+          defective.
         </p>
 
         <h2 className="pt-2 text-base font-bold text-slate-900">Delivery Charges</h2>
