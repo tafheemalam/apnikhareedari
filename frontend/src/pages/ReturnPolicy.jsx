@@ -40,8 +40,7 @@ export default function ReturnPolicy() {
 
         <h2 className="pt-2 text-base font-bold text-slate-900">Delivery Charges</h2>
         <p>
-          Return and replacement shipping is <strong>free</strong> — approved requests will not be charged any
-          delivery fee for returning the item or shipping a replacement.
+          The customer is responsible for delivery charges when returning an item or receiving a replacement.
         </p>
 
         <h2 className="pt-2 text-base font-bold text-slate-900">How to Start a Request</h2>
