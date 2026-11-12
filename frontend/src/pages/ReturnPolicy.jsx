@@ -14,7 +14,8 @@ export default function ReturnPolicy() {
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-600">
         <p>
           Whether an item arrived damaged or defective, or you simply want to return or exchange something you
-          no longer need, let us know and we'll work with you to make it right.
+          no longer need, let us know and we'll work with you to make it right. You have <strong>7 days from the
+          date of delivery</strong> to start a return, replacement, or refund request.
         </p>
 
         <h2 className="pt-2 text-base font-bold text-slate-900">Photo &amp; Video Proof Required</h2>
@@ -39,8 +40,8 @@ export default function ReturnPolicy() {
 
         <h2 className="pt-2 text-base font-bold text-slate-900">Delivery Charges</h2>
         <p>
-          If your request is approved, any delivery charges for returning the item or shipping a replacement will
-          be confirmed with you after we've reviewed your request.
+          Return and replacement shipping is <strong>free</strong> — approved requests will not be charged any
+          delivery fee for returning the item or shipping a replacement.
         </p>
 
         <h2 className="pt-2 text-base font-bold text-slate-900">How to Start a Request</h2>
