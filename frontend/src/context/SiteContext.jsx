@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import * as catalogService from '../services/catalogService';
 import * as basketService from '../services/basketService';
 
-const SiteContext = createContext(null);
+export const SiteContext = createContext(null);
 
 const FALLBACK_SETTINGS = {
   'store.name': 'ApniKhareedari',
